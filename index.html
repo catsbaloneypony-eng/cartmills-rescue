@@ -1,537 +1,145 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cartmills Animal Rescue – Management System</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cartmills Animal Rescue – Tracker</title>
 
 <style>
-  /* =========================================================
-     Cartmills Animal Rescue — Option A (Calm Blue)
-     Single-file offline app (localStorage)
-     ========================================================= */
-
   :root{
     color-scheme: light;
-    --bg: #f6f8fb;
-    --panel: #ffffff;
-    --panel-2: #f0f4ff;
-    --text: #0f172a;
-    --muted: #475569;
-    --border: rgba(15, 23, 42, 0.12);
-
-    --brand: #2b6cb0;        /* calm blue */
-    --brand-2: #1f4f85;
-    --accent: #22c55e;       /* success green */
-    --warn: #f59e0b;
-    --danger: #ef4444;
-
-    --shadow: 0 10px 24px rgba(15, 23, 42, 0.10);
-    --radius: 14px;
+    --bg:#f6f8fb; --panel:#fff; --panel2:#f0f4ff;
+    --text:#0f172a; --muted:#475569; --border:rgba(15,23,42,.14);
+    --brand:#2b6cb0; --brand2:#1f4f85; --danger:#ef4444;
+    --shadow:0 10px 24px rgba(15,23,42,.10); --r:14px;
   }
-
-  /* Dark mode via data-theme="dark" */
   html[data-theme="dark"]{
     color-scheme: dark;
-    --bg: #0b1220;
-    --panel: #0f172a;
-    --panel-2: #0b2a4d;
-    --text: #e5e7eb;
-    --muted: #a3b1c6;
-    --border: rgba(229,231,235,0.14);
-    --shadow: 0 10px 24px rgba(0,0,0,0.45);
+    --bg:#0b1220; --panel:#0f172a; --panel2:#0b2a4d;
+    --text:#e5e7eb; --muted:#a3b1c6; --border:rgba(229,231,235,.14);
+    --shadow:0 10px 24px rgba(0,0,0,.45);
   }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  .app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+  .sidebar{background:linear-gradient(180deg,var(--brand),var(--brand2));color:#fff;padding:14px;position:sticky;top:0;height:100vh;overflow:auto}
+  html[data-theme="dark"] .sidebar{background:linear-gradient(180deg,#0b2a4d,#061a31)}
+  .brand{display:flex;gap:10px;align-items:center;padding:10px 10px 14px}
+  .logo{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;font-weight:900}
+  .brand h1{font-size:15px;margin:0;line-height:1.2}
+  .brand p{margin:2px 0 0;opacity:.9;font-size:12px}
+  .top-actions{display:flex;gap:8px;padding:0 10px 10px}
+  .iconbtn{flex:1;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff;border-radius:12px;padding:10px;cursor:pointer;font-weight:700;font-size:12px}
+  .iconbtn:hover{background:rgba(255,255,255,.16)}
+  .nav{display:flex;flex-direction:column;gap:6px;padding:6px 8px 14px}
+  .nav button{width:100%;border:0;border-radius:12px;background:transparent;color:rgba(255,255,255,.92);padding:11px 12px;text-align:left;cursor:pointer;font-size:14px;font-weight:750;display:flex;justify-content:space-between;align-items:center}
+  .nav button:hover{background:rgba(255,255,255,.12)}
+  .nav button.active{background:rgba(255,255,255,.22);outline:2px solid rgba(255,255,255,.18)}
+  .main{padding:18px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .title h2{margin:0;font-size:18px}
+  .title small{color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:14px}
+  .card h3{margin:0 0 10px;font-size:16px}
+  .sub{color:var(--muted);margin:-6px 0 12px;font-size:13px}
+  .row{display:grid;grid-template-columns:repeat(12,1fr);gap:10px}
+  .field{grid-column:span 6}
+  .field.sm{grid-column:span 3}
+  .field.md{grid-column:span 4}
+  .field.lg{grid-column:span 8}
+  .field.full{grid-column:span 12}
+  label{display:block;font-size:12px;color:var(--muted);font-weight:800;margin-bottom:6px}
+  input,select,textarea{width:100%;padding:10px;border-radius:12px;border:1px solid var(--border);background:var(--panel);color:var(--text);outline:none}
+  textarea{min-height:90px;resize:vertical}
+  .btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+  .btn{border:0;border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:900}
+  .btn.primary{background:var(--brand);color:#fff}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+  .btn.danger{background:var(--danger);color:#fff}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--border);font-size:12px;font-weight:900}
+  .list{display:flex;flex-direction:column;gap:10px}
+  .item{border-radius:14px;border:1px solid var(--border);padding:12px;background:rgba(255,255,255,.35)}
+  html[data-theme="dark"] .item{background:rgba(255,255,255,.04)}
+  .item h4{margin:0 0 6px}
+  .muted{color:var(--muted);font-size:13px}
+  .hr{height:1px;background:var(--border);margin:10px 0}
+  section{display:none}
+  section.active{display:block}
 
-  /* High-contrast via data-contrast="high" */
-  html[data-contrast="high"]{
-    --border: rgba(255,255,255,0.55);
-    --shadow: none;
-  }
+  .overlay{position:fixed;inset:0;background:rgba(2,6,23,.65);display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}
+  .overlay.show{display:flex}
+  .modal{width:min(520px,100%);background:var(--panel);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:16px;color:var(--text)}
 
-  *{ box-sizing: border-box; }
-  body{
-    margin: 0;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-  }
-
-  .app{
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    min-height: 100vh;
-  }
-
-  /* Sidebar */
-  .sidebar{
-    background: linear-gradient(180deg, var(--brand) 0%, var(--brand-2) 100%);
-    color: #fff;
-    padding: 14px;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow: auto;
-  }
-  html[data-theme="dark"] .sidebar{
-    background: linear-gradient(180deg, #0b2a4d 0%, #061a31 100%);
-  }
-
-  .brand{
-    display:flex;
-    gap:10px;
-    align-items:center;
-    padding: 10px 10px 14px 10px;
-  }
-  .brand .logo{
-    width: 38px; height: 38px;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.16);
-    display:flex; align-items:center; justify-content:center;
-    font-weight: 800;
-  }
-  .brand h1{
-    font-size: 15px;
-    margin: 0;
-    line-height: 1.2;
-  }
-  .brand p{
-    margin: 2px 0 0 0;
-    opacity: 0.9;
-    font-size: 12px;
-  }
-
-  .sidebar .top-actions{
-    display:flex;
-    gap:8px;
-    padding: 0 10px 10px 10px;
-  }
-  .iconbtn{
-    flex: 1;
-    border: 1px solid rgba(255,255,255,0.25);
-    background: rgba(255,255,255,0.10);
-    color: #fff;
-    border-radius: 12px;
-    padding: 10px;
-    cursor: pointer;
-    font-weight: 650;
-    font-size: 12px;
-  }
-  .iconbtn:hover{ background: rgba(255,255,255,0.16); }
-
-  .nav{
-    display:flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 6px 8px 14px 8px;
-  }
-  .nav button{
-    width: 100%;
-    border: 0;
-    border-radius: 12px;
-    background: transparent;
-    color: rgba(255,255,255,0.92);
-    padding: 11px 12px;
-    text-align: left;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 650;
-    display:flex;
-    justify-content: space-between;
-    align-items:center;
-  }
-  .nav button:hover{ background: rgba(255,255,255,0.12); }
-  .nav button.active{
-    background: rgba(255,255,255,0.22);
-    outline: 2px solid rgba(255,255,255,0.18);
-  }
-
-  /* Collapsible sidebar */
-  .app.collapsed{
-    grid-template-columns: 78px 1fr;
-  }
-  .app.collapsed .brand h1,
-  .app.collapsed .brand p,
-  .app.collapsed .nav button span.label,
-  .app.collapsed .top-actions{
-    display:none;
-  }
-  .app.collapsed .brand{
-    justify-content:center;
-  }
-  .app.collapsed .nav button{
-    justify-content:center;
-    padding: 12px;
-  }
-
-  /* Main */
-  .main{
-    padding: 18px;
-  }
-
-  .topbar{
-    display:flex;
-    align-items:center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
-  }
-  .title{
-    display:flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .title h2{
-    margin: 0;
-    font-size: 18px;
-    letter-spacing: 0.2px;
-  }
-  .title small{
-    color: var(--muted);
-  }
-
-  .search{
-    flex: 1;
-    display:flex;
-    gap: 10px;
-    justify-content:flex-end;
-    align-items:center;
-  }
-  .search input{
-    width: min(520px, 100%);
-    padding: 12px 12px;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    background: var(--panel);
-    color: var(--text);
-    box-shadow: var(--shadow);
-    outline: none;
-  }
-
-  .grid{
-    display:grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 14px;
-  }
-
-  .card{
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 14px;
-  }
-  .card h3{
-    margin: 0 0 10px 0;
-    font-size: 16px;
-  }
-  .card .sub{
-    color: var(--muted);
-    margin: -6px 0 12px 0;
-    font-size: 13px;
-  }
-
-  .row{
-    display:grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 10px;
-  }
-  .field{ grid-column: span 6; }
-  .field.sm{ grid-column: span 3; }
-  .field.md{ grid-column: span 4; }
-  .field.lg{ grid-column: span 8; }
-  .field.full{ grid-column: span 12; }
-  label{
-    display:block;
-    font-size: 12px;
-    color: var(--muted);
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-  input, select, textarea{
-    width:100%;
-    padding: 10px 10px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    background: var(--panel);
-    color: var(--text);
-    outline: none;
-  }
-  textarea{ min-height: 90px; resize: vertical; }
-  .btnrow{
-    display:flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
-  }
-  .btn{
-    border: 0;
-    border-radius: 12px;
-    padding: 10px 12px;
-    cursor:pointer;
-    font-weight: 800;
-  }
-  .btn.primary{ background: var(--brand); color:#fff; }
-  .btn.primary:hover{ filter: brightness(1.05); }
-  .btn.ghost{ background: transparent; border:1px solid var(--border); color: var(--text); }
-  .btn.danger{ background: var(--danger); color: #fff; }
-
-  .pill{
-    display:inline-flex;
-    align-items:center;
-    gap: 6px;
-    padding: 6px 10px;
-    border-radius: 999px;
-    background: var(--panel-2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-size: 12px;
-    font-weight: 800;
-  }
-
-  .list{
-    display:flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .item{
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    padding: 12px;
-    background: rgba(255,255,255,0.35);
-  }
-  html[data-theme="dark"] .item{
-    background: rgba(255,255,255,0.04);
-  }
-  .item h4{ margin:0 0 6px 0; }
-  .muted{ color: var(--muted); font-size: 13px; }
-  .hr{ height:1px; background: var(--border); margin: 10px 0; }
-
-  section{ display:none; }
-  section.active{ display:block; }
-
-  /* Small screens */
-  @media (max-width: 980px){
-    .app{ grid-template-columns: 1fr; }
-    .sidebar{ position: relative; height:auto; }
-    .app.collapsed{ grid-template-columns: 1fr; }
-  }
-
-  /* Tiny toast for errors */
-  .toast{
-    position: fixed;
-    left: 14px;
-    bottom: 14px;
-    max-width: 520px;
-    padding: 12px 14px;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    background: var(--panel);
-    box-shadow: var(--shadow);
-    z-index: 9999;
-    display:none;
-  }
-  .toast.show{ display:block; }
-  .toast strong{ color: var(--danger); }
-  .toast code{
-    display:block;
-    margin-top: 6px;
-    white-space: pre-wrap;
-    color: var(--muted);
-    font-size: 12px;
+  @media (max-width:980px){
+    .app{grid-template-columns:1fr}
+    .sidebar{position:relative;height:auto}
   }
 </style>
-
-<!-- Leaflet (Live Map) -->
-<link rel="preconnect" href="https://unpkg.com" crossorigin>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-<style>
-  /* Live Map */
-  #car_map{ width:100%; height:520px; border-radius:14px; border:1px solid var(--border); overflow:hidden; }
-  .car_overlay{
-    position: fixed; inset: 0;
-    background: rgba(2,6,23,0.65);
-    display:none; align-items:center; justify-content:center;
-    padding: 16px; z-index: 10000;
-  }
-  .car_overlay.show{ display:flex; }
-  .car_modal{
-    width: min(520px, 100%);
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    box-shadow: var(--shadow);
-    padding: 16px;
-    color: var(--text);
-  }
-  .car_modal h3{ margin:0 0 6px 0; }
-  .car_modal p{ margin:0 0 12px 0; color: var(--muted); }
-</style>
-
 </head>
 
 <body>
 <div class="app" id="app">
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="brand">
       <div class="logo">CA</div>
       <div>
         <h1 id="brandName">Cartmills Animal Rescue</h1>
-        <p id="brandSub">Management System</p>
+        <p id="brandSub">Shared Tracker</p>
       </div>
     </div>
 
     <div class="top-actions">
-      <button class="iconbtn" id="btnCollapse" title="Collapse sidebar">☰ Menu</button>
-      <button class="iconbtn" id="btnTheme" title="Toggle dark mode">🌙 Dark</button>
-      <button class="iconbtn" id="btnContrast" title="High contrast mode">◐ Contrast</button>
+      <button class="iconbtn" id="btnTheme">🌙 Theme</button>
+      <button class="iconbtn" id="btnSync">⟳ Sync</button>
     </div>
 
     <nav class="nav" id="nav">
-      <button class="active" data-section="dashboard"><span class="label">Dashboard</span> <span>›</span></button>
-            <button data-section="map"><span class="label">Live Map</span> <span>›</span></button>
-<button data-section="rescue"><span class="label">Rescue Info</span> <span>›</span></button>
+      <button class="active" data-section="dashboard"><span class="label">Dashboard</span><span>›</span></button>
+      <button data-section="animals_list"><span class="label">Animals – List</span><span>›</span></button>
+      <button data-section="animals_add"><span class="label">Animals – Add</span><span>›</span></button>
+      <button data-section="fosters"><span class="label">Fosters</span><span>›</span></button>
+      <button data-section="vets"><span class="label">Vets</span><span>›</span></button>
+      <button data-section="pounds"><span class="label">Pounds</span><span>›</span></button>
+      <button data-section="calendar"><span class="label">Calendar</span><span>›</span></button>
+      <button data-section="accounting"><span class="label">Accounting</span><span>›</span></button>
+      <button data-section="rescue"><span class="label">Rescue Info</span><span>›</span></button>
 
-      <button data-section="animals_list"><span class="label">Animals – List</span> <span>›</span></button>
-      <button data-section="animals_add"><span class="label">Animals – Add</span> <span>›</span></button>
-      <button data-section="animals_edit"><span class="label">Animals – Edit</span> <span>›</span></button>
-      <button data-section="archive"><span class="label">Archive</span> <span>›</span></button>
-
-      <button data-section="fosters"><span class="label">Fosters</span> <span>›</span></button>
-      <button data-section="adopters"><span class="label">Adopters</span> <span>›</span></button>
-      <button data-section="email_match"><span class="label">Email / Matching</span> <span>›</span></button>
-
-      <button data-section="vets"><span class="label">Vets</span> <span>›</span></button>
-      <button data-section="transport"><span class="label">Transport</span> <span>›</span></button>
-      <button data-section="pounds"><span class="label">Pounds</span> <span>›</span></button>
-      <button data-section="calendar"><span class="label">Calendar</span> <span>›</span></button>
-
-      <button data-section="accounting"><span class="label">Accounting</span> <span>›</span></button>
-      <button data-section="forms"><span class="label">Forms</span> <span>›</span></button>
-      <button data-section="donations"><span class="label">Donations</span> <span>›</span></button>
-      <button data-section="fundraising"><span class="label">Fundraising</span> <span>›</span></button>
-
-      <button data-section="directory"><span class="label">Rescue Directory</span> <span>›</span></button>
-          <button id="carLogoutBtn" class="iconbtn" style="margin-top:10px; border-color: rgba(255,255,255,0.35);">↩ Logout</button>
-</nav>
+      <button id="logoutBtn" class="iconbtn" style="margin-top:10px;border-color:rgba(255,255,255,.35)">↩ Logout</button>
+    </nav>
   </aside>
 
-  <!-- Main -->
   <main class="main">
     <div class="topbar">
       <div class="title">
         <h2 id="pageTitle">Dashboard</h2>
-        <small id="pageHint">Quick snapshot of animals & activity.</small>
+        <small id="pageHint">Shared database via Google Sheets.</small>
       </div>
-      <div class="search">
-        <input id="globalSearch" type="search" placeholder="Search animals, fosters, adopters, vets, pounds… (type & press Enter)" />
-      </div>
+      <div class="muted" id="syncStatus"></div>
     </div>
 
-    <!-- Sections -->
     <section id="section-dashboard" class="active">
       <div class="grid">
-        <div class="card" style="grid-column: span 12;">
+        <div class="card" style="grid-column:span 12;">
           <h3>Dashboard</h3>
-          <p class="sub">Cartmills Animal Rescue – overview (stored in your browser only).</p>
+          <p class="sub">If tabs were not clickable before, it was a JavaScript syntax error. This file fixes it.</p>
           <div class="row">
-            <div class="field md">
-              <div class="pill">Animals total: <span id="dashTotal">0</span></div>
-            </div>
-            <div class="field md">
-              <div class="pill">In foster: <span id="dashFoster">0</span></div>
-            </div>
-            <div class="field md">
-              <div class="pill">Adopted: <span id="dashAdopted">0</span></div>
-            </div>
+            <div class="field md"><div class="pill">Animals: <span id="dashTotal">0</span></div></div>
+            <div class="field md"><div class="pill">In foster: <span id="dashFoster">0</span></div></div>
+            <div class="field md"><div class="pill">Adopted: <span id="dashAdopted">0</span></div></div>
           </div>
           <div class="hr"></div>
-          <div class="row">
-            <div class="field full">
-              <label>Auto Archive</label>
-              <div class="muted">
-                Animals marked <b>Adopted</b> are kept in the main list for <b>30 days</b>, then automatically moved to Archive.
-              </div>
-              <div class="btnrow">
-                <button class="btn ghost" onclick="runAutoArchive()">Run Auto Archive Now</button>
-                <button class="btn ghost" onclick="exportBackup()">Download Backup (JSON)</button>
-                <button class="btn ghost" onclick="importBackup()">Import Backup (JSON)</button>
-              </div>
-              <input id="importFile" type="file" accept="application/json" style="display:none" />
-            </div>
+          <div class="btnrow">
+            <button class="btn ghost" id="btnExport">Download Backup (JSON)</button>
+            <button class="btn ghost" id="btnImport">Import Backup (JSON)</button>
           </div>
+          <input id="importFile" type="file" accept="application/json" style="display:none" />
         </div>
 
-        <div class="card" style="grid-column: span 12;">
-          <h3>Longest in Care</h3>
-          <p class="sub">Sorted by date rescued (oldest first).</p>
-          <div id="dashLongest" class="list"></div>
-        </div>
-      </div>
-    </section>
-
-    
-
-<section id="section-map">
-  <div class="card">
-    <h3>Live Map</h3>
-    <p class="sub">
-      Fosters = <b style="color:#16a34a;">Green</b>, Vets = <b style="color:#2563eb;">Blue</b>,
-      Transport service area = <b style="color:#dc2626;">Red</b>, Pounds = <b style="color:#7c3aed;">Purple</b>.
-      <br><span class="muted">This map reads your saved Fosters / Vets / Transport / Pounds and plots any that have coordinates.</span>
-    </p>
-    <div class="row">
-      <div class="field md">
-        <label>Map Center (lat, lng)</label>
-        <input id="car_mapCenter" type="text" placeholder="-27.4698, 153.0251 (Brisbane)" />
-      </div>
-      <div class="field sm">
-        <label>Zoom</label>
-        <input id="car_mapZoom" type="number" min="3" max="18" value="10" />
-      </div>
-      <div class="field md" style="display:flex; align-items:end; gap:10px;">
-        <button class="btn primary" onclick="CAR_Map.init(true)">Update View</button>
-        <button class="btn ghost" onclick="CAR_Map.refresh()">Refresh Markers</button>
-      </div>
-    </div>
-    <div class="hr"></div>
-    <div id="car_map"></div>
-  </div>
-
-  <div class="card" style="margin-top:14px;">
-    <h3>Map Setup (Coordinates)</h3>
-    <p class="sub">
-      You can paste coordinates manually, or use “Auto-locate” (works best when this file is hosted on HTTPS).
-      <br><span class="muted">Transport shows a <b>radius</b> circle in km.</span>
-    </p>
-    <div id="car_mapManager" class="list"></div>
-  </div>
-</section>
-
-<section id="section-rescue">
-      <div class="card">
-        <h3>Rescue Information</h3>
-        <p class="sub">This sets the title/branding in the app.</p>
-        <div class="row">
-          <div class="field md">
-            <label>Rescue Name</label>
-            <input id="rescueName" type="text" placeholder="Cartmills Animal Rescue" />
-          </div>
-          <div class="field md">
-            <label>Contact Email (optional)</label>
-            <input id="rescueEmail" type="text" placeholder="email@example.com" />
-          </div>
-          <div class="field full">
-            <label>Mission / Notes</label>
-            <textarea id="rescueNotes" placeholder="What your rescue does…"></textarea>
-          </div>
-        </div>
-        <div class="btnrow">
-          <button class="btn primary" onclick="saveRescue()">Save Rescue Info</button>
+        <div class="card" style="grid-column:span 12;">
+          <h3>Newest animals</h3>
+          <p class="sub">Latest 10 added.</p>
+          <div id="dashNewest" class="list"></div>
         </div>
       </div>
     </section>
@@ -539,7 +147,7 @@
     <section id="section-animals_list">
       <div class="card">
         <h3>Animals – List</h3>
-        <p class="sub">Click an animal to edit. Use the global search above too.</p>
+        <p class="sub">Click Edit to update a record.</p>
         <div id="animalsList" class="list"></div>
       </div>
     </section>
@@ -548,54 +156,27 @@
       <div class="card">
         <h3>Animals – Add</h3>
         <p class="sub">Unique code auto-generated: Dog = D####, Cat = C####</p>
-
         <div class="row">
           <div class="field md">
             <label>Species</label>
-            <select id="aSpecies" onchange="onSpeciesChange()">
+            <select id="aSpecies">
               <option value="">Select…</option>
               <option value="dog">Dog</option>
               <option value="cat">Cat</option>
             </select>
           </div>
-
           <div class="field md">
             <label>Unique Code</label>
-            <input id="aCode" type="text" readonly />
+            <input id="aCode" readonly />
           </div>
-
           <div class="field md">
             <label>Name (optional)</label>
-            <input id="aName" type="text" placeholder="e.g., Daisy" />
+            <input id="aName" placeholder="e.g., Daisy" />
           </div>
-
           <div class="field md">
             <label>Date Rescued</label>
             <input id="aRescued" type="date" />
           </div>
-
-          <div class="field md">
-            <label>DOB (optional)</label>
-            <input id="aDob" type="date" onchange="updateAgeFromDob()" />
-          </div>
-
-          <div class="field md">
-            <label>Estimated Age (auto if DOB)</label>
-            <input id="aAge" type="text" placeholder="e.g., 2 years" />
-          </div>
-
-          <div class="field md">
-            <label>Life Stage</label>
-            <select id="aStage">
-              <option value="">Select…</option>
-            </select>
-          </div>
-
-          <div class="field md">
-            <label>Mother of Litter (optional)</label>
-            <select id="aMother"></select>
-          </div>
-
           <div class="field md">
             <label>Sex</label>
             <select id="aSex">
@@ -604,124 +185,29 @@
               <option value="female">Female</option>
             </select>
           </div>
-
           <div class="field md">
             <label>Colour</label>
-            <input id="aColour" type="text" placeholder="Short note (e.g., Black, Tabby, Brown/White)" maxlength="40" />
+            <input id="aColour" maxlength="40" />
           </div>
-
           <div class="field md">
-            <label>Coat Type</label>
-            <select id="aCoat">
-              <option value="">Select…</option>
-              <option>Short</option><option>Medium</option><option>Long</option>
-            </select>
-          </div>
-
-          <div class="field md">
-            <label>Size</label>
-            <select id="aSize">
-              <option value="">Select…</option>
-              <option>Small</option><option>Medium</option><option>Large</option><option>XL</option>
-            </select>
-          </div>
-
-          <div class="field sm">
-            <label>Weight (kg)</label>
-            <input id="aKg" type="number" step="0.001" oninput="syncFromKg()" />
-          </div>
-          <div class="field sm">
-            <label>Weight (g)</label>
-            <input id="aG" type="number" step="1" oninput="syncFromG()" />
-          </div>
-          <div class="field sm">
-            <label>Weight (lb)</label>
-            <input id="aLb" type="number" step="0.01" oninput="syncFromLb()" />
-          </div>
-          <div class="field sm">
-            <label>Weight (oz)</label>
-            <input id="aOz" type="number" step="0.01" oninput="syncFromOz()" />
-          </div>
-
-          <div class="field md">
-            <label>Breed</label>
-            <input id="aBreed" type="text" placeholder="Short note (e.g., Kelpie, Domestic Shorthair)" maxlength="50" />
-          </div>
-
-          <div class="field md">
-            <label><input id="aCross" type="checkbox" onchange="toggleCrossBreed()"> Crossbreed?</label>
-            <div id="crossBox" style="display:none; margin-top:8px;">
-              <label>Other Breed</label>
-              <input id="aOtherBreed" type="text" placeholder="Type other breed…" />
-            </div>
-          </div>
-
-          <div class="field md">
-            <label>Current Location</label>
+            <label>Location</label>
             <select id="aLocation">
               <option value="">Select…</option>
               <option value="pound">Pound</option>
-              <option value="transport">Transport</option>
               <option value="foster">Foster</option>
               <option value="adopted">Adopted</option>
+              <option value="transport">Transport</option>
             </select>
           </div>
-
-          <div class="field md">
-            <label>Diet</label>
-            <select id="aDiet" onchange="toggleDiet()">
-              <option value="standard">Standard</option>
-              <option value="nonstandard">Non-standard</option>
-            </select>
-            <div id="dietBox" style="display:none; margin-top:8px;">
-              <label>Diet Notes</label>
-              <textarea id="aDietNotes" placeholder="Describe diet…"></textarea>
-            </div>
-          </div>
-
-          <div class="field md">
-            <label>Movement Status</label>
-            <select id="aMovement">
-              <option value="">None</option>
-              <option value="hold">Hold</option>
-              <option value="quarantine">Quarantine</option>
-              <option value="permanent_foster">Permanent Foster</option>
-              <option value="trial_adoption">Trial Adoption / Foster-to-adopt</option>
-            </select>
-          </div>
-
           <div class="field full">
-            <label>Photo Upload</label>
-            <input id="aPhoto" type="file" accept="image/*" />
-            <div class="muted">Photo is saved into your browser storage (offline).</div>
-          </div>
-
-          <div class="field full" id="puppyKittenBox" style="display:none;">
-            <h4 style="margin:10px 0 6px 0;">Puppy/Kitten Daily Weight Log</h4>
-            <p class="muted">If stage is Puppy/Kitten, you can record day-to-day weights later in Edit → Weight Log.</p>
+            <label>Notes</label>
+            <textarea id="aNotes" placeholder="Medical notes, temperament, etc."></textarea>
           </div>
         </div>
-
         <div class="btnrow">
-          <button class="btn primary" onclick="saveAnimal()">Save Animal</button>
-          <button class="btn ghost" onclick="clearAnimalForm()">Clear</button>
+          <button class="btn primary" id="btnSaveAnimal">Save Animal</button>
+          <button class="btn ghost" id="btnClearAnimal">Clear</button>
         </div>
-      </div>
-    </section>
-
-    <section id="section-animals_edit">
-      <div class="card">
-        <h3>Animals – Edit</h3>
-        <p class="sub">Select an animal from Animals – List.</p>
-        <div id="editWrap" class="muted">No animal selected.</div>
-      </div>
-    </section>
-
-    <section id="section-archive">
-      <div class="card">
-        <h3>Archive</h3>
-        <p class="sub">Adopted animals move here after 30 days. You can restore them.</p>
-        <div id="archiveList" class="list"></div>
       </div>
     </section>
 
@@ -729,120 +215,17 @@
       <div class="card">
         <h3>Fosters</h3>
         <div class="row">
-          <div class="field md">
-            <label>Name</label>
-            <input id="fName" type="text" />
-          </div>
-          <div class="field sm">
-            <label>Age</label>
-            <input id="fAge" type="number" />
-          </div>
-          <div class="field md">
-            <label>Phone</label>
-            <input id="fPhone" type="text" />
-          </div>
-          <div class="field full">
-            <label>Address</label>
-            <input id="fAddress" type="text" />
-          </div>
-          <div class="field md">
-            <label>Can Foster</label>
-            <select id="fSpecies">
-              <option value="dog">Dog</option>
-              <option value="cat">Cat</option>
-              <option value="both">Both</option>
-            </select>
-          </div>
-          <div class="field sm">
-            <label>Capacity</label>
-            <input id="fCap" type="number" min="0" />
-          </div>
-          <div class="field sm">
-            <label>Currently Hosting</label>
-            <input id="fHosting" type="number" min="0" value="0" />
-          </div>
-          <div class="field md">
-            <label>Emergency Short-term?</label>
-            <select id="fEmergency">
-              <option value="no">No</option>
-              <option value="yes">Yes</option>
-            </select>
-          </div>
-          <div class="field full">
-            <label>Home/holding photo upload</label>
-            <input id="fPhoto" type="file" accept="image/*" />
-          </div>
+          <div class="field md"><label>Name</label><input id="fName"></div>
+          <div class="field md"><label>Phone</label><input id="fPhone"></div>
+          <div class="field full"><label>Address</label><input id="fAddress"></div>
+          <div class="field sm"><label>Capacity</label><input id="fCap" type="number" min="0"></div>
+          <div class="field sm"><label>Hosting</label><input id="fHosting" type="number" min="0" value="0"></div>
         </div>
         <div class="btnrow">
-          <button class="btn primary" onclick="saveFoster()">Save Foster</button>
+          <button class="btn primary" id="btnSaveFoster">Save Foster</button>
         </div>
         <div class="hr"></div>
-        <h4 style="margin:0 0 8px 0;">Foster List</h4>
         <div id="fosterList" class="list"></div>
-      </div>
-
-      <div class="card">
-        <h3>Staff Roles</h3>
-        <p class="sub">Simple staff list (local only).</p>
-        <div class="row">
-          <div class="field md">
-            <label>Staff Name</label>
-            <input id="sName" type="text" />
-          </div>
-          <div class="field md">
-            <label>Role Title</label>
-            <input id="sRole" type="text" />
-          </div>
-          <div class="field full">
-            <label>Description</label>
-            <textarea id="sDesc"></textarea>
-          </div>
-        </div>
-        <div class="btnrow">
-          <button class="btn primary" onclick="saveStaff()">Add Staff Role</button>
-        </div>
-        <div class="hr"></div>
-        <div id="staffList" class="list"></div>
-      </div>
-    </section>
-
-    <section id="section-adopters">
-      <div class="card">
-        <h3>Adopters</h3>
-        <div class="row">
-          <div class="field md"><label>Name</label><input id="adName" type="text" /></div>
-          <div class="field sm"><label>Age</label><input id="adAge" type="number" /></div>
-          <div class="field md"><label>Phone</label><input id="adPhone" type="text" /></div>
-          <div class="field full"><label>Address</label><input id="adAddress" type="text" /></div>
-          <div class="field full"><label>Home Photo Upload</label><input id="adPhoto" type="file" accept="image/*" /></div>
-        </div>
-        <div class="btnrow">
-          <button class="btn primary" onclick="saveAdopter()">Save Adopter</button>
-        </div>
-        <div class="hr"></div>
-        <div id="adopterList" class="list"></div>
-      </div>
-    </section>
-
-    <section id="section-email_match">
-      <div class="card">
-        <h3>Email / Matching</h3>
-        <p class="sub">Pick animal type and find fosters with space.</p>
-        <div class="row">
-          <div class="field md">
-            <label>Animal Type</label>
-            <select id="matchType">
-              <option value="dog">Dog</option>
-              <option value="cat">Cat</option>
-            </select>
-          </div>
-          <div class="field md" style="display:flex; align-items:end;">
-            <button class="btn primary" onclick="runMatch()">Find Foster Options</button>
-          </div>
-          <div class="field full">
-            <div id="matchResults" class="list"></div>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -850,51 +233,29 @@
       <div class="card">
         <h3>Vets</h3>
         <div class="row">
-          <div class="field md"><label>Clinic Name</label><input id="vName" type="text" /></div>
-          <div class="field md"><label>Opening Hours</label><input id="vHours" type="text" /></div>
-          <div class="field full"><label>Address</label><input id="vAddress" type="text" /></div>
-          <div class="field md"><label>Phone</label><input id="vPhone" type="text" /></div>
-          <div class="field sm"><label>Desex $</label><input id="vDesex" type="number" /></div>
-          <div class="field sm"><label>Vaccinations $</label><input id="vVax" type="number" /></div>
-          <div class="field full"><label>Extra Pricing Notes</label><textarea id="vExtra"></textarea></div>
+          <div class="field md"><label>Clinic Name</label><input id="vName"></div>
+          <div class="field md"><label>Phone</label><input id="vPhone"></div>
+          <div class="field full"><label>Address</label><input id="vAddress"></div>
         </div>
         <div class="btnrow">
-          <button class="btn primary" onclick="saveVet()">Save Vet</button>
+          <button class="btn primary" id="btnSaveVet">Save Vet</button>
         </div>
         <div class="hr"></div>
         <div id="vetList" class="list"></div>
       </div>
     </section>
 
-    <section id="section-transport">
-      <div class="card">
-        <h3>Transport</h3>
-        <div class="row">
-          <div class="field md"><label>Company Name</label><input id="tName" type="text" /></div>
-          <div class="field md"><label>Phone</label><input id="tPhone" type="text" /></div>
-          <div class="field full"><label>Address</label><input id="tAddress" type="text" /></div>
-          <div class="field full"><label>Area Serviced</label><input id="tArea" type="text" /></div>
-        </div>
-        <div class="btnrow">
-          <button class="btn primary" onclick="saveTransport()">Save Transport</button>
-        </div>
-        <div class="hr"></div>
-        <div id="transportList" class="list"></div>
-      </div>
-    </section>
-
     <section id="section-pounds">
       <div class="card">
         <h3>Pounds</h3>
-        <p class="sub">Adds an automatic reminder to call the day before.</p>
         <div class="row">
-          <div class="field md"><label>Pound Name</label><input id="pName" type="text" /></div>
-          <div class="field md"><label>Best Contact</label><input id="pContact" type="text" /></div>
-          <div class="field full"><label>Address</label><input id="pAddress" type="text" /></div>
-          <div class="field md"><label>Estimated Euthanasia Day</label><input id="pEuth" type="date" /></div>
+          <div class="field md"><label>Pound Name</label><input id="pName"></div>
+          <div class="field md"><label>Best Contact</label><input id="pContact"></div>
+          <div class="field full"><label>Address</label><input id="pAddress"></div>
+          <div class="field md"><label>Estimated Euthanasia Day</label><input id="pEuth" type="date"></div>
         </div>
         <div class="btnrow">
-          <button class="btn primary" onclick="savePound()">Save Pound</button>
+          <button class="btn primary" id="btnSavePound">Save Pound</button>
         </div>
         <div class="hr"></div>
         <div id="poundList" class="list"></div>
@@ -905,17 +266,15 @@
       <div class="card">
         <h3>Calendar</h3>
         <div class="row">
-          <div class="field md"><label>Date</label><input id="cDate" type="date" /></div>
-          <div class="field lg"><label>Reminder / Vet Booking</label><input id="cNote" type="text" /></div>
-          <div class="field md"><label>Status</label>
-            <select id="cStatus">
-              <option value="booked">Booked</option>
-              <option value="completed">Completed</option>
-            </select>
+          <div class="field md"><label>Date</label><input id="cDate" type="date"></div>
+          <div class="field lg"><label>Reminder / Vet Booking</label><input id="cNote"></div>
+          <div class="field md">
+            <label>Status</label>
+            <select id="cStatus"><option value="booked">Booked</option><option value="completed">Completed</option></select>
           </div>
         </div>
         <div class="btnrow">
-          <button class="btn primary" onclick="addCalendar()">Add</button>
+          <button class="btn primary" id="btnAddCal">Add</button>
         </div>
         <div class="hr"></div>
         <div id="calendarList" class="list"></div>
@@ -925,21 +284,17 @@
     <section id="section-accounting">
       <div class="card">
         <h3>Accounting</h3>
-        <p class="sub">Basic expense tracking (income can be added later).</p>
         <div class="row">
-          <div class="field md"><label>Date</label><input id="accDate" type="date" /></div>
-          <div class="field lg"><label>Description</label><input id="accDesc" type="text" /></div>
-          <div class="field md"><label>Category</label>
-            <select id="accCat">
-              <option>Vet</option><option>Food</option><option>Transport</option><option>Supplies</option><option>Admin</option><option>Other</option>
-            </select>
+          <div class="field md"><label>Date</label><input id="accDate" type="date"></div>
+          <div class="field lg"><label>Description</label><input id="accDesc"></div>
+          <div class="field md">
+            <label>Category</label>
+            <select id="accCat"><option>Vet</option><option>Food</option><option>Transport</option><option>Supplies</option><option>Admin</option><option>Other</option></select>
           </div>
-          <div class="field md"><label>Amount ($)</label><input id="accAmt" type="number" step="0.01" /></div>
-          <div class="field full"><label>Receipt Upload</label><input id="accReceipt" type="file" accept="image/*,application/pdf" /></div>
+          <div class="field md"><label>Amount ($)</label><input id="accAmt" type="number" step="0.01"></div>
         </div>
         <div class="btnrow">
-          <button class="btn primary" onclick="addExpense()">Add Expense</button>
-          <button class="btn ghost" onclick="exportCSV()">Export CSV</button>
+          <button class="btn primary" id="btnAddExpense">Add Expense</button>
         </div>
         <div class="hr"></div>
         <div class="pill">Running Total: $<span id="accTotal">0.00</span></div>
@@ -948,129 +303,75 @@
       </div>
     </section>
 
-    <section id="section-forms">
+    <section id="section-rescue">
       <div class="card">
-        <h3>Forms Library</h3>
+        <h3>Rescue Info</h3>
+        <p class="sub">This updates the title/branding. Saved into the shared sheet too.</p>
         <div class="row">
-          <div class="field md"><label>Title</label><input id="formTitle" type="text" /></div>
-          <div class="field full"><label>Upload File</label><input id="formFile" type="file" /></div>
+          <div class="field md"><label>Rescue Name</label><input id="rName"></div>
+          <div class="field md"><label>Contact Email</label><input id="rEmail"></div>
+          <div class="field full"><label>Notes</label><textarea id="rNotes"></textarea></div>
         </div>
         <div class="btnrow">
-          <button class="btn primary" onclick="saveForm()">Upload Form</button>
+          <button class="btn primary" id="btnSaveRescue">Save Rescue Info</button>
         </div>
-        <div class="hr"></div>
-        <div id="formsList" class="list"></div>
       </div>
     </section>
 
-    <section id="section-donations">
+    <section id="section-animals_edit">
       <div class="card">
-        <h3>Donations</h3>
-        <div class="row">
-          <div class="field md"><label>Company / Donor</label><input id="dName" type="text" /></div>
-          <div class="field md"><label>Contact Person</label><input id="dContact" type="text" /></div>
-          <div class="field md"><label>Phone</label><input id="dPhone" type="text" /></div>
-          <div class="field full"><label>Address</label><input id="dAddress" type="text" /></div>
-          <div class="field md"><label>Date</label><input id="dDate" type="date" /></div>
-          <div class="field full"><label>Notes</label><textarea id="dNotes"></textarea></div>
-          <div class="field md"><label>Receipt required?</label>
-            <select id="dReceipt"><option value="no">No</option><option value="yes">Yes</option></select>
-          </div>
-        </div>
-        <div class="btnrow">
-          <button class="btn primary" onclick="saveDonation()">Save Donation</button>
-        </div>
-        <div class="hr"></div>
-        <div id="donationsList" class="list"></div>
+        <h3>Animals – Edit</h3>
+        <p class="sub">Edit selected animal.</p>
+        <div id="editWrap" class="muted">No animal selected.</div>
       </div>
     </section>
 
-    <section id="section-fundraising">
-      <div class="card">
-        <h3>Fundraising</h3>
-        <div class="row">
-          <div class="field md"><label>Event / Campaign Name</label><input id="frName" type="text" /></div>
-          <div class="field md"><label>Date</label><input id="frDate" type="date" /></div>
-          <div class="field full"><label>Description</label><textarea id="frDesc"></textarea></div>
-        </div>
-        <div class="btnrow">
-          <button class="btn primary" onclick="saveFundraiser()">Save Event</button>
-        </div>
-        <div class="hr"></div>
-        <div id="fundList" class="list"></div>
-
-        <div class="hr"></div>
-        <h4 style="margin:0 0 8px 0;">Merchandise (manual)</h4>
-        <div class="row">
-          <div class="field md"><label>Item</label><input id="mName" type="text" /></div>
-          <div class="field sm"><label>Price</label><input id="mPrice" type="number" step="0.01" /></div>
-          <div class="field full"><label>Photo Upload</label><input id="mPhoto" type="file" accept="image/*" /></div>
-        </div>
-        <div class="btnrow">
-          <button class="btn primary" onclick="saveMerch()">Add Item</button>
-        </div>
-        <div class="hr"></div>
-        <div class="muted">
-          No-upfront merch idea (print-on-demand): Printful, Spring (Teespring), Redbubble, Zazzle. (You can add links here later.)
-        </div>
-        <div class="hr"></div>
-        <div id="merchList" class="list"></div>
-      </div>
-    </section>
-
-    <section id="section-directory">
-      <div class="card">
-        <h3>Rescue Directory</h3>
-        <div class="row">
-          <div class="field md"><label>Rescue Name</label><input id="rdName" type="text" /></div>
-          <div class="field md"><label>Contact / Address</label><input id="rdContact" type="text" /></div>
-          <div class="field md"><label>Working Area</label><input id="rdArea" type="text" /></div>
-          <div class="field md"><label>Species Focus</label><input id="rdSpecies" type="text" /></div>
-          <div class="field sm"><label>Ease (1–5)</label>
-            <select id="rdEase"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
-          </div>
-          <div class="field sm"><label>Use?</label>
-            <select id="rdUse" onchange="toggleRdNote()">
-              <option value="use">Use</option>
-              <option value="dont">Don’t use</option>
-            </select>
-          </div>
-          <div class="field full" id="rdNoteBox" style="display:none;">
-            <label>If don’t use, why?</label>
-            <textarea id="rdNote"></textarea>
-          </div>
-        </div>
-        <div class="btnrow">
-          <button class="btn primary" onclick="saveRescueDirectory()">Save</button>
-        </div>
-        <div class="hr"></div>
-        <div id="directoryList" class="list"></div>
-      </div>
-    </section>
   </main>
 </div>
 
-<div class="toast" id="toast"><strong>JavaScript error:</strong><code id="toastMsg"></code></div>
+<!-- Login overlay -->
+<div class="overlay" id="loginOverlay">
+  <div class="modal">
+    <h3 id="loginTitle">Login</h3>
+    <p class="muted" id="loginHint">Admin is <b>admin/admin</b>. Staff default password is <b>Helper123</b> (forced change).</p>
+
+    <div id="loginForm">
+      <div class="row">
+        <div class="field full"><label>Email / Username</label><input id="loginEmail" placeholder="admin"></div>
+        <div class="field full"><label>Password</label><input id="loginPw" type="password" placeholder="admin"></div>
+      </div>
+      <div class="btnrow">
+        <button class="btn primary" id="btnLogin">Login</button>
+      </div>
+    </div>
+
+    <div id="pwChange" style="display:none">
+      <div class="row">
+        <div class="field full"><label>New Password</label><input id="pw1" type="password"></div>
+        <div class="field full"><label>Confirm Password</label><input id="pw2" type="password"></div>
+      </div>
+      <div class="btnrow">
+        <button class="btn primary" id="btnChangePw">Save New Password</button>
+      </div>
+    </div>
+
+    <div class="hr"></div>
+    <div class="muted" id="adminArea" style="display:none"></div>
+  </div>
+</div>
 
 <script>
 /* =========================================================
-   Error display (so you can tell me what it says)
+   CONFIG (Shared DB via Google Sheets Apps Script Web App)
    ========================================================= */
-window.addEventListener("error", (e) => {
-  const t = document.getElementById("toast");
-  const msg = document.getElementById("toastMsg");
-  msg.textContent = (e.message || "Unknown error") + "\\n" + (e.filename || "") + ":" + (e.lineno || "") ;
-  t.classList.add("show");
-});
-
-/* =========================================================
-   Helpers
-   ========================================================= */
-// ===== Shared DB via Google Sheets (Apps Script Web App) =====
+// IMPORTANT: keep these 3 OUTSIDE of any object literal (this was your bug).
 const CAR_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbycEcZSNa6pWX7MbcB1Kvm0njfKlG_tYhNVOtq11bN1wlTQmKhdgsV3eV1NkLVxA2nF/exec";
 const CAR_SLUG = "cartmills";
-const CAR_TOKEN = "Cartmills2026"; // must match Apps Script TOKEN exactly
+const CAR_TOKEN = "Cartmills2026"; // change later (don’t share publicly)
 
+/* =========================================================
+   Storage helpers (localStorage + auto-save to shared DB)
+   ========================================================= */
 const LS = {
   get(key, fallback){
     try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
@@ -1078,71 +379,58 @@ const LS = {
   },
   set(key, val){
     localStorage.setItem(key, JSON.stringify(val));
+    CAR_scheduleSave();
   }
 };
 
+const SS = {
+  get(key, fallback){
+    try { return JSON.parse(sessionStorage.getItem(key) || JSON.stringify(fallback)); }
+    catch { return fallback; }
+  },
+  set(key, val){ sessionStorage.setItem(key, JSON.stringify(val)); },
+  del(key){ sessionStorage.removeItem(key); }
+};
 
+const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
+const todayISO = () => new Date().toISOString().slice(0,10);
 
-// Remove photos/files from shared sync (Sheets cell size limit)
-function CAR_stripBigStuff(payload){
-  const p = JSON.parse(JSON.stringify(payload || {}));
-
-  (p.animals || []).forEach(a => {
-    if (a) {
-      a.photo = "";
-      (a.vaccinations||[]).forEach(x => x.data = "");
-      (a.certificates||[]).forEach(x => x.data = "");
-      (a.media||[]).forEach(x => x.data = "");
-    }
-  });
-
-  (p.fosters || []).forEach(f => { if (f) f.photo = ""; });
-  (p.adopters || []).forEach(a => { if (a) a.photo = ""; });
-
-  (p.expenses || []).forEach(e => { if (e && e.receipt) e.receipt.data = ""; });
-  (p.forms || []).forEach(f => { if (f) f.data = ""; });
-  (p.merch || []).forEach(m => { if (m) m.photo = ""; });
-
-  return p;
+function setSyncStatus(msg){
+  document.getElementById("syncStatus").textContent = msg || "";
 }
+function escapeHtml(s){ return String(s ?? "").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m])); }
+function escapeAttr(s){ return escapeHtml(s).replace(/"/g,"&quot;"); }
 
+/* =========================================================
+   Shared DB payload
+   ========================================================= */
 function CAR_buildPayload(){
   return {
-    rescue_info: LS.get("rescue_info", {}),
+    rescue_info: LS.get("rescue_info", {name:"Cartmills Animal Rescue", email:"", notes:""}),
     animals: LS.get("animals", []),
-    archive: LS.get("archive", []),
     fosters: LS.get("fosters", []),
-    adopters: LS.get("adopters", []),
-    staff: LS.get("staff", []),
     vets: LS.get("vets", []),
-    transport: LS.get("transport", []),
     pounds: LS.get("pounds", []),
     calendar: LS.get("calendar", []),
-    expenses: LS.get("expenses", []),
-    forms: LS.get("forms", []),
-    donations: LS.get("donations", []),
-    fundraisers: LS.get("fundraisers", []),
-    merch: LS.get("merch", []),
-    directory: LS.get("directory", [])
+    expenses: LS.get("expenses", [])
   };
 }
-
 function CAR_applyPayload(payload){
   if (!payload) return;
   Object.keys(payload).forEach(k => localStorage.setItem(k, JSON.stringify(payload[k])));
 }
 
-// --- LOAD (JSONP) ---
 function CAR_loadShared(){
   return new Promise((resolve, reject) => {
-    const cbName = "CAR_onLoad_" + Date.now();
+    const cbName = "CAR_cb_" + Date.now();
     window[cbName] = (resp) => {
       try{
         if (!resp || !resp.ok) throw new Error(resp?.error || "Load failed");
         CAR_applyPayload(resp.payload || {});
+        setSyncStatus("Loaded shared data.");
         resolve(true);
-      } catch(err){
-        reject(err);
+      } catch(e){
+        reject(e);
       } finally {
         try { delete window[cbName]; } catch {}
         script.remove();
@@ -1152,21 +440,20 @@ function CAR_loadShared(){
     const url = `${CAR_WEBAPP_URL}?action=load&slug=${encodeURIComponent(CAR_SLUG)}&token=${encodeURIComponent(CAR_TOKEN)}&callback=${encodeURIComponent(cbName)}`;
     const script = document.createElement("script");
     script.src = url;
-    script.onerror = () => reject(new Error("Load failed (URL/token/deploy access)"));
+    script.onerror = () => reject(new Error("Load failed (bad URL/token/deploy access)"));
     document.head.appendChild(script);
   });
 }
 
-// --- SAVE (POST via hidden form) ---
 let CAR_saveTimer = null;
 function CAR_scheduleSave(){
   clearTimeout(CAR_saveTimer);
-  CAR_saveTimer = setTimeout(CAR_saveNow, 900);
+  CAR_saveTimer = setTimeout(CAR_saveNow, 800);
 }
 
 function CAR_saveNow(){
-  const payload = CAR_stripBigStuff(CAR_buildPayload());
-  const payloadText = JSON.stringify(payload);
+  // POST via hidden iframe/form to avoid CORS issues
+  const payloadText = JSON.stringify(CAR_buildPayload());
 
   let iframe = document.getElementById("carSaveFrame");
   if (!iframe){
@@ -1190,1594 +477,44 @@ function CAR_saveNow(){
 
   form.innerHTML = `
     <input name="action" value="save" />
-    <input name="slug" value="${CAR_SLUG}" />
-    <input name="token" value="${CAR_TOKEN}" />
+    <input name="slug" value="${escapeAttr(CAR_SLUG)}" />
+    <input name="token" value="${escapeAttr(CAR_TOKEN)}" />
     <input name="payload" />
   `;
   form.querySelector('input[name="payload"]').value = payloadText;
   form.submit();
-}
-
-// Wrap LS.set so ANY change triggers shared save
-const _LS_set_original = LS.set.bind(LS);
-LS.set = function(key, val){
-  _LS_set_original(key, val);
-  CAR_scheduleSave();
-};
-
-  get(key, fallback){
-    try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
-    catch { return fallback; }
-  },
-  set(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
-};
-const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
-const todayISO = () => new Date().toISOString().slice(0,10);
-  const nowISO = () => new Date().toISOString();
-  const locationLabel = (loc) => {
-    const v = (loc||"").toLowerCase();
-    const map = {
-      intake: "Intake",
-      shelter: "Shelter",
-      quarantine: "Quarantine",
-      medical: "Medical",
-      transport: "Transport",
-      foster: "Foster",
-      adopted: "Adopter",
-      other: "Other"
-    };
-    return map[v] || (loc||"");
-  };
-
-function setPageTitle(title, hint){
-  document.getElementById("pageTitle").textContent = title;
-  document.getElementById("pageHint").textContent = hint || "";
+  setSyncStatus("Saved to shared DB.");
 }
 
 /* =========================================================
-   Navigation (FIXED)
+   Login + permissions (stored locally per device)
    ========================================================= */
-function showSection(key){
-  document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
-  const el = document.getElementById("section-" + key);
-  if (!el) {
-    alert("Section not found: " + key);
-    return;
-  }
-  el.classList.add("active");
-
-  document.querySelectorAll("#nav button").forEach(b => b.classList.remove("active"));
-  const btn = document.querySelector('#nav button[data-section="'+key+'"]');
-  if (btn) btn.classList.add("active");
-
-  const map = {
-    dashboard: ["Dashboard", "Quick snapshot of animals & activity."],
-    rescue: ["Rescue Info", "Branding and rescue details."],
-    animals_list: ["Animals – List", "View all animals in care."],
-    animals_add: ["Animals – Add", "Add a new animal record."],
-    animals_edit: ["Animals – Edit", "Edit a selected animal record."],
-    archive: ["Archive", "Adopted animals stored here after 30 days."],
-    fosters: ["Fosters", "Foster carers and staff roles."],
-    adopters: ["Adopters", "Adopter list & details."],
-    email_match: ["Email / Matching", "Find fosters with space by animal type."],
-    vets: ["Vets", "Vet clinic list and pricing."],
-    transport: ["Transport", "Transport companies."],
-    pounds: ["Pounds", "Pounds and euthanasia reminders."],
-    calendar: ["Calendar", "Vet bookings and reminders."],
-    accounting: ["Accounting", "Expenses and receipts."],
-    forms: ["Forms", "Upload and store your rescue forms."],
-    donations: ["Donations", "Track donors and receipts."],
-    fundraising: ["Fundraising", "Events and merchandise."],
-    directory: ["Rescue Directory", "Other rescues and how easy they are to work with."]
-  };
-  const t = map[key] || [key, ""];
-  setPageTitle(t[0], t[1]);
-}
-
-document.getElementById("nav").addEventListener("click", (e) => {
-  const btn = e.target.closest("button[data-section]");
-  if (!btn) return;
-  showSection(btn.dataset.section);
-});
-
-/* Sidebar controls */
-document.getElementById("btnCollapse").addEventListener("click", ()=>{
-  document.getElementById("app").classList.toggle("collapsed");
-});
-document.getElementById("btnTheme").addEventListener("click", ()=>{
-  const html = document.documentElement;
-  const cur = html.getAttribute("data-theme") || "light";
-  html.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
-  LS.set("theme", html.getAttribute("data-theme"));
-});
-document.getElementById("btnContrast").addEventListener("click", ()=>{
-  const html = document.documentElement;
-  const cur = html.getAttribute("data-contrast") || "normal";
-  html.setAttribute("data-contrast", cur === "high" ? "normal" : "high");
-  LS.set("contrast", html.getAttribute("data-contrast"));
-});
-
-/* Global search */
-document.getElementById("globalSearch").addEventListener("keydown", (e)=>{
-  if (e.key !== "Enter") return;
-  const q = e.target.value.trim().toLowerCase();
-  if (!q) return;
-  const results = runGlobalSearch(q);
-  showSearchResults(q, results);
-});
-
-function runGlobalSearch(q){
-  const animals = LS.get("animals", []);
-  const fosters = LS.get("fosters", []);
-  const adopters = LS.get("adopters", []);
-  const vets = LS.get("vets", []);
-  const pounds = LS.get("pounds", []);
-  const hit = (obj) => JSON.stringify(obj).toLowerCase().includes(q);
-  return {
-    animals: animals.filter(hit),
-    fosters: fosters.filter(hit),
-    adopters: adopters.filter(hit),
-    vets: vets.filter(hit),
-    pounds: pounds.filter(hit),
-  };
-}
-function showSearchResults(q, r){
-  // Show on Animals list page for simplicity
-  showSection("animals_list");
-  const box = document.getElementById("animalsList");
-  const a = r.animals;
-  box.innerHTML = `
-    <div class="item">
-      <h4>Search results for: "${escapeHtml(q)}"</h4>
-      <div class="muted">
-        Animals: ${a.length} • Fosters: ${r.fosters.length} • Adopters: ${r.adopters.length} • Vets: ${r.vets.length} • Pounds: ${r.pounds.length}
-      </div>
-    </div>
-    ${a.length ? a.map(renderAnimalRow).join("") : `<div class="item"><div class="muted">No animals matched.</div></div>`}
-  `;
-}
-
-/* =========================================================
-   Branding
-   ========================================================= */
-function loadBrand(){
-  const info = LS.get("rescue_info", {name:"Cartmills Animal Rescue", email:"", notes:""});
-  document.getElementById("brandName").textContent = info.name || "Cartmills Animal Rescue";
-  document.title = (info.name || "Cartmills Animal Rescue") + " – Management System";
-  document.getElementById("rescueName").value = info.name || "";
-  document.getElementById("rescueEmail").value = info.email || "";
-  document.getElementById("rescueNotes").value = info.notes || "";
-}
-function saveRescue(){
-  const info = {
-    name: document.getElementById("rescueName").value.trim() || "Cartmills Animal Rescue",
-    email: document.getElementById("rescueEmail").value.trim(),
-    notes: document.getElementById("rescueNotes").value.trim()
-  };
-  LS.set("rescue_info", info);
-  loadBrand();
-  alert("Saved.");
-}
-
-/* =========================================================
-   Animals
-   ========================================================= */
-function getNextAnimalCode(species){
-  const animals = LS.get("animals", []);
-  const prefix = species === "dog" ? "D" : "C";
-  let max = 0;
-  animals.forEach(a=>{
-    if (typeof a.code === "string" && a.code.startsWith(prefix)){
-      const n = parseInt(a.code.slice(1), 10);
-      if (!isNaN(n)) max = Math.max(max, n);
-    }
-  });
-  const next = max + 1;
-  return prefix + String(next).padStart(4, "0");
-}
-
-function onSpeciesChange(){
-  const species = document.getElementById("aSpecies").value;
-  if (!species){
-    document.getElementById("aCode").value = "";
-    document.getElementById("aStage").innerHTML = `<option value="">Select…</option>`;
-    return;
-  }
-  document.getElementById("aCode").value = getNextAnimalCode(species);
-
-  // Stage depends on species
-  const stage = document.getElementById("aStage");
-  if (species === "dog"){
-    stage.innerHTML = `
-    <option value="" selected disabled>Select Life Stage</option>
-    <option value="1_8_weeks">1-8 weeks</option>
-    <option value="adult">Adult</option>
-    <option value="elderly">Elderly</option>
-  `;
-} else {
-    stage.innerHTML = `
-    <option value="" selected disabled>Select Life Stage</option>
-    <option value="1_8_weeks">1-8 weeks</option>
-    <option value="adult">Adult</option>
-    <option value="elderly">Elderly</option>
-  `;
-}
-  stage.onchange = () => {
-    const v = stage.value;
-    document.getElementById("puppyKittenBox").style.display =
-      (v === "1_8_weeks") ? "block" : "none";
-  };
-  stage.dispatchEvent(new Event("change"));
-
-  refreshMotherDropdown();
-}
-
-function refreshMotherDropdown(){
-  const sel = document.getElementById("aMother");
-  const animals = LS.get("animals", []);
-  const female = animals.filter(a => a.sex === "female");
-  sel.innerHTML = `<option value="">None</option>` + female.map(a => {
-    const label = `${a.code}${a.name ? " – " + escapeHtml(a.name) : ""}`;
-    return `<option value="${a.code}">${label}</option>`;
-  }).join("");
-}
-
-function toggleCrossBreed(){
-  document.getElementById("crossBox").style.display =
-    document.getElementById("aCross").checked ? "block" : "none";
-}
-
-function toggleDiet(){
-  document.getElementById("dietBox").style.display =
-    document.getElementById("aDiet").value === "nonstandard" ? "block" : "none";
-}
-
-/* Age auto from DOB */
-function updateAgeFromDob(){
-  const dob = document.getElementById("aDob").value;
-  if (!dob) return;
-  const d = new Date(dob);
-  const now = new Date();
-  const ms = now - d;
-  const days = Math.floor(ms / (1000*60*60*24));
-  if (days < 60){
-    document.getElementById("aAge").value = `${days} days`;
-  } else if (days < 365){
-    const w = Math.floor(days / 7);
-    document.getElementById("aAge").value = `${w} weeks`;
-  } else {
-    const y = (days / 365).toFixed(1);
-    document.getElementById("aAge").value = `${y} years`;
-  }
-}
-
-/* Photo upload -> Data URL */
-function fileToDataURL(file){
-  return new Promise((resolve, reject)=>{
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-/* Weight syncing */
-function syncFromKg(){
-  const kg = parseFloat(document.getElementById("aKg").value);
-  if (!isFinite(kg)) return;
-  document.getElementById("aG").value = Math.round(kg * 1000);
-  document.getElementById("aLb").value = (kg * 2.2046226218).toFixed(2);
-  document.getElementById("aOz").value = (kg * 35.27396195).toFixed(2);
-}
-function syncFromG(){
-  const g = parseFloat(document.getElementById("aG").value);
-  if (!isFinite(g)) return;
-  document.getElementById("aKg").value = (g / 1000).toFixed(3);
-  syncFromKg();
-}
-function syncFromLb(){
-  const lb = parseFloat(document.getElementById("aLb").value);
-  if (!isFinite(lb)) return;
-  const kg = lb / 2.2046226218;
-  document.getElementById("aKg").value = kg.toFixed(3);
-  syncFromKg();
-}
-function syncFromOz(){
-  const oz = parseFloat(document.getElementById("aOz").value);
-  if (!isFinite(oz)) return;
-  const kg = oz / 35.27396195;
-  document.getElementById("aKg").value = kg.toFixed(3);
-  syncFromKg();
-}
-
-async function saveAnimal(){
-  const species = document.getElementById("aSpecies").value;
-  if (!species) return alert("Please select Species.");
-
-  const code = document.getElementById("aCode").value;
-  if (!code) return alert("Code missing. Re-select Species.");
-
-  const animals = LS.get("animals", []);
-  if (animals.some(a => a.code === code)) return alert("That code already exists. Re-select Species.");
-
-  const photoFile = document.getElementById("aPhoto").files[0];
-  const photo = photoFile ? await fileToDataURL(photoFile) : "";
-
-  const animal = {
-    id: uid(),
-    code,
-    species,
-    name: document.getElementById("aName").value.trim(),
-    dateRescued: document.getElementById("aRescued").value || todayISO(),
-    dob: document.getElementById("aDob").value || "",
-    age: document.getElementById("aAge").value.trim(),
-    stage: document.getElementById("aStage").value,
-    mother: document.getElementById("aMother").value,
-    sex: document.getElementById("aSex").value,
-    colour: document.getElementById("aColour").value,
-    coat: document.getElementById("aCoat").value,
-    size: document.getElementById("aSize").value,
-
-    kg: Number(document.getElementById("aKg").value || 0),
-    g: Number(document.getElementById("aG").value || 0),
-    lb: Number(document.getElementById("aLb").value || 0),
-    oz: Number(document.getElementById("aOz").value || 0),
-
-    breed: document.getElementById("aBreed").value,
-    crossbreed: document.getElementById("aCross").checked,
-    otherBreed: document.getElementById("aOtherBreed").value.trim(),
-
-    location: document.getElementById("aLocation").value,
-    dietType: document.getElementById("aDiet").value,
-    dietNotes: document.getElementById("aDietNotes").value.trim(),
-    movement: document.getElementById("aMovement").value,
-
-    photo,
-
-    status: "active",
-    adoptedDate: "",
-    createdAt: Date.now(),
-
-    vaccinations: [], certificates: [], media: [], vetHistory: [], weightLog: []
-  };
-
-  animals.push(animal);
-  LS.set("animals", animals);
-
-  alert("Animal saved.");
-  clearAnimalForm();
-  refreshMotherDropdown();
-  renderAnimalsList();
-  renderDashboard();
-  showSection("animals_list");
-}
-
-function clearAnimalForm(){
-  ["aSpecies","aCode","aName","aRescued","aDob","aAge","aStage","aMother","aSex","aColour","aCoat","aSize","aKg","aG","aLb","aOz","aBreed","aCross","aOtherBreed","aLocation","aDiet","aDietNotes","aMovement"].forEach(id=>{
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (el.type === "checkbox") el.checked = false;
-    else el.value = "";
-  });
-  document.getElementById("crossBox").style.display = "none";
-  document.getElementById("dietBox").style.display = "none";
-  document.getElementById("puppyKittenBox").style.display = "none";
-  document.getElementById("aPhoto").value = "";
-}
-
-function renderAnimalRow(a){
-  const name = a.name ? escapeHtml(a.name) : "<span class='muted'>Unnamed</span>";
-  const rescued = a.dateRescued || "";
-  const loc = a.location || "";
-  const pic = a.photo ? `<img src="${a.photo}" alt="photo" style="width:56px;height:56px;object-fit:cover;border-radius:12px;border:1px solid var(--border)" />` : `<div style="width:56px;height:56px;border-radius:12px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);">No photo</div>`;
-  return `
-    <div class="item" style="display:flex;gap:12px;align-items:center;justify-content:space-between;">
-      <div style="display:flex;gap:12px;align-items:center;">
-        ${pic}
-        <div>
-          <h4 style="margin:0;">${escapeHtml(a.code)} • ${name}</h4>
-          <div class="muted">${escapeHtml(a.species)} • rescued: ${escapeHtml(rescued)} • location: ${escapeHtml(loc)}</div>
-        </div>
-      </div>
-      <div class="btnrow" style="margin:0;">
-        <button class="btn ghost" onclick="openEdit('${a.id}')">Edit</button>
-      </div>
-    </div>
-  `;
-}
-
-function renderAnimalsList(){
-  const animals = LS.get("animals", []).filter(a => a.status !== "archived");
-  // Sort by rescued date asc (oldest first)
-  animals.sort((a,b)=> new Date(a.dateRescued || 0) - new Date(b.dateRescued || 0));
-  const box = document.getElementById("animalsList");
-  if (!animals.length){
-    box.innerHTML = `<div class="item"><div class="muted">No animals yet. Use Animals – Add.</div></div>`;
-    return;
-  }
-  box.innerHTML = animals.map(renderAnimalRow).join("");
-}
-
-/* Edit page with subtabs */
-function openEdit(id){
-  const animals = LS.get("animals", []);
-  const a = animals.find(x => x.id === id);
-  if (!a) return alert("Animal not found.");
-
-  showSection("animals_edit");
-
-  const edit = document.getElementById("editWrap");
-  edit.classList.remove("muted");
-  edit.innerHTML = `
-    <div class="row">
-      <div class="field full">
-        <div class="pill">${escapeHtml(a.code)} • ${escapeHtml(a.name || "Unnamed")} • ${escapeHtml(a.species)}</div>
-      </div>
-      <div class="field full">
-        <div class="btnrow">
-          <button class="btn ghost" onclick="editTab('main','${a.id}')">Main</button>
-          <button class="btn ghost" onclick="editTab('vacc','${a.id}')">Vaccinations</button>
-          <button class="btn ghost" onclick="editTab('cert','${a.id}')">Certificates</button>
-          <button class="btn ghost" onclick="editTab('media','${a.id}')">Media</button>
-          <button class="btn ghost" onclick="editTab('vet','${a.id}')">Vet History</button>
-          <button class="btn ghost" onclick="editTab('weight','${a.id}')">Weight Log</button>
-          <button class="btn ghost" onclick="editTab('moves','${a.id}')">Movements</button>
-        </div>
-      </div>
-      <div class="field full" id="editTabBody"></div>
-    </div>
-  `;
-  editTab("main", id);
-}
-
-function editTab(tab, id){
-  const animals = LS.get("animals", []);
-  const a = animals.find(x => x.id === id);
-  const body = document.getElementById("editTabBody");
-
-  if (tab === "main"){
-    body.innerHTML = `
-      <div class="card" style="box-shadow:none;">
-        <h3>Main Info</h3>
-        <div class="row">
-          <div class="field md"><label>Name</label><input id="eName" value="${escapeAttr(a.name||"")}" /></div>
-          <div class="field md"><label>Location</label>
-            <select id="eLoc">
-              <option value="">Select…</option>
-              <option value="pound" ${a.location==="pound"?"selected":""}>Pound</option>
-              <option value="transport" ${a.location==="transport"?"selected":""}>Transport</option>
-              <option value="foster" ${a.location==="foster"?"selected":""}>Foster</option>
-              <option value="adopted" ${a.location==="adopted"?"selected":""}>Adopted</option>
-            </select>
-          </div>
-          <div class="field md"><label>Adopted Date (if adopted)</label><input id="eAdoptedDate" type="date" value="${escapeAttr(a.adoptedDate||"")}" /></div>
-          <div class="field full"><label>Update Photo</label><input id="ePhoto" type="file" accept="image/*" /></div>
-        </div>
-        <div class="btnrow">
-          <button class="btn primary" onclick="saveMainEdit('${a.id}')">Save Main</button>
-          <button class="btn danger" onclick="deleteAnimal('${a.id}')">Delete</button>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  if (tab === "vacc"){
-    body.innerHTML = `
-      <div class="card" style="box-shadow:none;">
-        <h3>Vaccinations</h3>
-        <div class="muted">Upload certificates; they are stored locally.</div>
-        <div class="hr"></div>
-        <input id="vFile" type="file" />
-        <div class="btnrow"><button class="btn primary" onclick="addFileToAnimal('${a.id}','vaccinations','vFile')">Add</button></div>
-        <div class="hr"></div>
-        <div class="list">${renderFileList(a.vaccinations, a.id, "vaccinations")}</div>
-      </div>
-    `;
-    return;
-  }
-
-  if (tab === "cert"){
-    body.innerHTML = `
-      <div class="card" style="box-shadow:none;">
-        <h3>Certificates (microchip / desex etc.)</h3>
-        <input id="cFile" type="file" />
-        <div class="btnrow"><button class="btn primary" onclick="addFileToAnimal('${a.id}','certificates','cFile')">Add</button></div>
-        <div class="hr"></div>
-        <div class="list">${renderFileList(a.certificates, a.id, "certificates")}</div>
-      </div>
-    `;
-    return;
-  }
-
-  if (tab === "media"){
-    body.innerHTML = `
-      <div class="card" style="box-shadow:none;">
-        <h3>Media (ads / social posts)</h3>
-        <input id="mFile" type="file" accept="image/*,video/*" />
-        <div class="btnrow"><button class="btn primary" onclick="addFileToAnimal('${a.id}','media','mFile')">Add</button></div>
-        <div class="hr"></div>
-        <div class="list">${renderFileList(a.media, a.id, "media")}</div>
-      </div>
-    `;
-    return;
-  }
-
-  if (tab === "vet"){
-    body.innerHTML = `
-      <div class="card" style="box-shadow:none;">
-        <h3>Vet History</h3>
-        <div class="row">
-          <div class="field md"><label>Date</label><input id="vhDate" type="date" value="${todayISO()}" /></div>
-          <div class="field md"><label>Vet Used (text)</label><input id="vhVet" type="text" /></div>
-          <div class="field full"><label>Notes</label><textarea id="vhNotes"></textarea></div>
-        </div>
-        <div class="btnrow"><button class="btn primary" onclick="addVetHistory('${a.id}')">Add Entry</button></div>
-        <div class="hr"></div>
-        <div class="list">
-          ${(a.vetHistory||[]).map((v,i)=>`
-            <div class="item">
-              <h4 style="margin:0;">${escapeHtml(v.date||"")}${v.vet ? " • " + escapeHtml(v.vet) : ""}</h4>
-              <div class="muted">${escapeHtml(v.notes||"")}</div>
-              <div class="btnrow" style="margin:10px 0 0 0;">
-                <button class="btn ghost" onclick="removeAnimalEntry('${a.id}','vetHistory',${i})">Remove</button>
-              </div>
-            </div>
-          `).join("") || `<div class="item"><div class="muted">No entries.</div></div>`}
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  if (tab === "weight"){
-    body.innerHTML = `
-      <div class="card" style="box-shadow:none;">
-        <h3>Weight Log</h3>
-        <div class="row">
-          <div class="field md"><label>Date</label><input id="wlDate" type="date" value="${todayISO()}" /></div>
-          <div class="field md"><label>Weight (kg)</label><input id="wlKg" type="number" step="0.001" /></div>
-        </div>
-        <div class="btnrow"><button class="btn primary" onclick="addWeightLog('${a.id}')">Add</button></div>
-        <div class="hr"></div>
-        <div class="list">
-          ${(a.weightLog||[]).slice().reverse().map((w,i)=>`
-            <div class="item">
-              <h4 style="margin:0;">${escapeHtml(w.date||"")} • ${escapeHtml(String(w.kg||""))} kg</h4>
-              <div class="btnrow" style="margin:10px 0 0 0;">
-                <button class="btn ghost" onclick="removeAnimalEntry('${a.id}','weightLog',${(a.weightLog||[]).length-1-i})">Remove</button>
-              </div>
-            </div>
-          `).join("") || `<div class="item"><div class="muted">No weights yet.</div></div>`}
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  if(tab==="moves"){
-    const animals = LS.get("animals", []);
-    const a = animals.find(x => x.id === id);
-    if(!a) return;
-
-    if(!Array.isArray(a.movementHistory)){
-      a.movementHistory = [];
-      if(a.location){
-        a.movementHistory.push({ ts: nowISO(), from: "", to: a.location, type: locationLabel(a.location), entity: "", notes: "Imported" });
-      }
-      LS.set("animals", animals);
-    }
-
-    const items = (a.movementHistory||[]).slice().reverse().map(e=>{
-      const when = e.ts ? new Date(e.ts).toLocaleString() : "";
-      const from = e.from ? locationLabel(e.from) : "";
-      const to = e.to ? locationLabel(e.to) : "";
-      const line = (from && to) ? `${from} → ${to}` : (to || e.type || "");
-      return `
-        <div class="card" style="padding:10px;margin:8px 0">
-          <div class="muted" style="font-size:12px">${escapeHtml(when)}</div>
-          <div><b>${escapeHtml(line)}</b></div>
-          ${e.entity ? `<div><span class="muted">With:</span> ${escapeHtml(e.entity)}</div>` : ""}
-          ${e.notes ? `<div><span class="muted">Note:</span> ${escapeHtml(e.notes)}</div>` : ""}
-        </div>
-      `;
-    }).join("");
-
-    body.innerHTML = `
-      <h3>Movement history</h3>
-      <div class="muted">This log is automatically updated when you change an animal’s <b>Location</b> on the Main tab (Transport / Foster / Adopter, etc.).</div>
-      <div style="margin-top:10px">${items || '<div class="muted">No movement history yet.</div>'}</div>
-    `;
-    return;
-  }
-
-}
-
-async function saveMainEdit(id){
-  const animals = LS.get("animals", []);
-  const a = animals.find(x => x.id === id);
-  if(!a) return;
-
-  const oldLoc = a.location || "intake";
-  const newLoc = v("eLoc") || oldLoc;
-  const moveWho = (document.getElementById("eMoveWho")?.value || "").trim();
-  const moveNote = (document.getElementById("eMoveNote")?.value || "").trim();
-
-  if(!Array.isArray(a.movementHistory)) a.movementHistory = [];
-  const shouldLog = (oldLoc !== newLoc) || ((moveWho || moveNote) && !!newLoc);
-  if(shouldLog){
-    a.movementHistory.push({
-      ts: nowISO(),
-      from: oldLoc,
-      to: newLoc,
-      type: locationLabel(newLoc),
-      entity: moveWho,
-      notes: moveNote
-    });
-  }
-
-  a.name = v("eName");
-  a.species = v("eSpecies");
-  a.rescuedDate = v("eRescued");
-  a.location = newLoc;
-  a.adoptedDate = v("eAdoptedDate");
-
-  const photoInput = document.getElementById("ePhoto");
-  if(photoInput && photoInput.files && photoInput.files[0]){
-    a.photo = await fileToDataURL(photoInput.files[0]);
-  }
-
-  // Clear movement note fields so you don't accidentally log the same note twice
-  if(document.getElementById("eMoveWho")) document.getElementById("eMoveWho").value = "";
-  if(document.getElementById("eMoveNote")) document.getElementById("eMoveNote").value = "";
-
-  LS.set("animals", animals);
-  toast("Saved");
-  editTab("main", id);
-}
-
-function deleteAnimal(id){
-  if (!confirm("Delete this animal?")) return;
-  const animals = LS.get("animals", []);
-  const next = animals.filter(a => a.id !== id);
-  LS.set("animals", next);
-  renderAnimalsList();
-  renderDashboard();
-  showSection("animals_list");
-}
-
-function renderFileList(arr, animalId, key){
-  if (!arr || !arr.length) return `<div class="item"><div class="muted">No files.</div></div>`;
-  return arr.map((f,i)=>{
-    const isImg = (f.data||"").startsWith("data:image/");
-    const isVid = (f.data||"").startsWith("data:video/");
-    const preview = isImg ? `<img src="${f.data}" style="width:120px;height:90px;object-fit:cover;border-radius:12px;border:1px solid var(--border)" />` :
-                    isVid ? `<video src="${f.data}" controls style="width:220px;border-radius:12px;border:1px solid var(--border)"></video>` :
-                    `<div class="pill">File</div>`;
-    return `
-      <div class="item" style="display:flex;gap:12px;align-items:center;justify-content:space-between;">
-        <div style="display:flex;gap:12px;align-items:center;">
-          ${preview}
-          <div>
-            <h4 style="margin:0;">${escapeHtml(f.name||("File "+(i+1)))}</h4>
-            <div class="muted">${escapeHtml(f.type||"")}</div>
-          </div>
-        </div>
-        <div class="btnrow" style="margin:0;">
-          <button class="btn ghost" onclick="downloadDataURL('${escapeAttr(f.name||"download")}', '${escapeAttr(f.data||"")}')">Download</button>
-          <button class="btn ghost" onclick="removeAnimalEntry('${animalId}','${key}',${i})">Remove</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-async function addFileToAnimal(animalId, key, inputId){
-  const file = document.getElementById(inputId).files[0];
-  if (!file) return alert("Choose a file first.");
-  const animals = LS.get("animals", []);
-  const a = animals.find(x => x.id === animalId);
-  if (!a) return;
-  const data = await fileToDataURL(file);
-  a[key] = a[key] || [];
-  a[key].push({ name: file.name, type: file.type, data });
-  LS.set("animals", animals);
-  editTab(key === "vaccinations" ? "vacc" : key === "certificates" ? "cert" : key, animalId);
-}
-
-function removeAnimalEntry(animalId, key, idx){
-  const animals = LS.get("animals", []);
-  const a = animals.find(x => x.id === animalId);
-  if (!a || !Array.isArray(a[key])) return;
-  a[key].splice(idx, 1);
-  LS.set("animals", animals);
-  // refresh current tab
-  const map = { vaccinations:"vacc", certificates:"cert", media:"media", vetHistory:"vet", weightLog:"weight" };
-  editTab(map[key] || "main", animalId);
-}
-
-function addVetHistory(id){
-  const animals = LS.get("animals", []);
-  const a = animals.find(x => x.id === id);
-  if (!a) return;
-  a.vetHistory = a.vetHistory || [];
-  a.vetHistory.push({
-    date: document.getElementById("vhDate").value,
-    vet: document.getElementById("vhVet").value.trim(),
-    notes: document.getElementById("vhNotes").value.trim()
-  });
-  LS.set("animals", animals);
-  editTab("vet", id);
-}
-
-function addWeightLog(id){
-  const kg = parseFloat(document.getElementById("wlKg").value);
-  if (!isFinite(kg)) return alert("Enter a weight (kg).");
-  const animals = LS.get("animals", []);
-  const a = animals.find(x => x.id === id);
-  if (!a) return;
-  a.weightLog = a.weightLog || [];
-  a.weightLog.push({ date: document.getElementById("wlDate").value, kg: Number(kg.toFixed(3)) });
-  LS.set("animals", animals);
-  editTab("weight", id);
-}
-
-/* Auto-archive adopted after 30 days */
-function runAutoArchive(){
-  const animals = LS.get("animals", []);
-  const archive = LS.get("archive", []);
-  const now = Date.now();
-  const keep = [];
-  let moved = 0;
-
-  animals.forEach(a=>{
-    const adopted = a.location === "adopted";
-    const adoptedDate = a.adoptedDate ? new Date(a.adoptedDate).getTime() : 0;
-    if (adopted && adoptedDate && (now - adoptedDate) > 30*24*60*60*1000){
-      a.status = "archived";
-      archive.push(a);
-      moved++;
-    } else {
-      keep.push(a);
-    }
-  });
-
-  LS.set("animals", keep);
-  LS.set("archive", archive);
-  renderAnimalsList();
-  renderArchive();
-  renderDashboardLite();
-}
-
-function renderArchive(){
-  const archive = LS.get("archive", []);
-  const box = document.getElementById("archiveList");
-  if (!archive.length){
-    box.innerHTML = `<div class="item"><div class="muted">No archived animals yet.</div></div>`;
-    return;
-  }
-  box.innerHTML = archive.slice().reverse().map((a,i)=>`
-    <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
-      <div>
-        <h4 style="margin:0;">${escapeHtml(a.code)} • ${escapeHtml(a.name||"Unnamed")}</h4>
-        <div class="muted">Adopted: ${escapeHtml(a.adoptedDate||"")}</div>
-      </div>
-      <div class="btnrow" style="margin:0;">
-        <button class="btn ghost" onclick="restoreArchived(${i})">Restore</button>
-      </div>
-    </div>
-  `).join("");
-}
-
-function restoreArchived(index){
-  const archive = LS.get("archive", []);
-  const animals = LS.get("animals", []);
-  const a = archive.splice(index, 1)[0];
-  if (!a) return;
-  a.status = "active";
-  animals.push(a);
-  LS.set("archive", archive);
-  LS.set("animals", animals);
-  renderArchive();
-  renderAnimalsList();
-  renderDashboard();
-}
-
-/* =========================================================
-   Fosters
-   ========================================================= */
-async function saveFoster(){
-  const fosters = LS.get("fosters", []);
-  const photoFile = document.getElementById("fPhoto").files[0];
-  const photo = photoFile ? await fileToDataURL(photoFile) : "";
-  fosters.push({
-    id: uid(),
-    name: document.getElementById("fName").value.trim(),
-    age: Number(document.getElementById("fAge").value || 0),
-    phone: document.getElementById("fPhone").value.trim(),
-    address: document.getElementById("fAddress").value.trim(),
-    species: document.getElementById("fSpecies").value,
-    capacity: Number(document.getElementById("fCap").value || 0),
-    hosting: Number(document.getElementById("fHosting").value || 0),
-    emergency: document.getElementById("fEmergency").value === "yes",
-    photo
-  });
-  LS.set("fosters", fosters);
-  alert("Saved foster.");
-  renderFosters();
-}
-
-function renderFosters(){
-  const fosters = LS.get("fosters", []);
-  const box = document.getElementById("fosterList");
-  if (!fosters.length){
-    box.innerHTML = `<div class="item"><div class="muted">No fosters yet.</div></div>`;
-    return;
-  }
-  box.innerHTML = fosters.map(f=>{
-    const remaining = Math.max(0, (f.capacity||0) - (f.hosting||0));
-    const warn = remaining <= 0 ? `<span class="pill" style="background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.35);">Full</span>` : `<span class="pill">Space: ${remaining}</span>`;
-    const pic = f.photo ? `<img src="${f.photo}" style="width:56px;height:56px;object-fit:cover;border-radius:12px;border:1px solid var(--border)" />` : "";
-    return `
-      <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
-        <div style="display:flex;gap:12px;align-items:center;">
-          ${pic}
-          <div>
-            <h4 style="margin:0;">${escapeHtml(f.name||"Unnamed foster")}</h4>
-            <div class="muted">${escapeHtml(f.phone||"")} • ${escapeHtml(f.species||"")} • cap ${f.capacity||0} • hosting ${f.hosting||0} • emergency ${f.emergency?"yes":"no"}</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          ${warn}
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-/* Staff */
-function saveStaff(){
-  const staff = LS.get("staff", []);
-  staff.push({
-    id: uid(),
-    name: document.getElementById("sName").value.trim(),
-    role: document.getElementById("sRole").value.trim(),
-    desc: document.getElementById("sDesc").value.trim()
-  });
-  LS.set("staff", staff);
-  renderStaff();
-}
-function renderStaff(){
-  const staff = LS.get("staff", []);
-  const box = document.getElementById("staffList");
-  if (!staff.length){
-    box.innerHTML = `<div class="item"><div class="muted">No staff roles yet.</div></div>`;
-    return;
-  }
-  box.innerHTML = staff.map(s=>`
-    <div class="item">
-      <h4 style="margin:0;">${escapeHtml(s.name||"")}${s.role ? " — " + escapeHtml(s.role) : ""}</h4>
-      <div class="muted">${escapeHtml(s.desc||"")}</div>
-    </div>
-  `).join("");
-}
-
-/* =========================================================
-   Adopters
-   ========================================================= */
-async function saveAdopter(){
-  const adopters = LS.get("adopters", []);
-  const photoFile = document.getElementById("adPhoto").files[0];
-  const photo = photoFile ? await fileToDataURL(photoFile) : "";
-  adopters.push({
-    id: uid(),
-    name: document.getElementById("adName").value.trim(),
-    age: Number(document.getElementById("adAge").value || 0),
-    phone: document.getElementById("adPhone").value.trim(),
-    address: document.getElementById("adAddress").value.trim(),
-    photo
-  });
-  LS.set("adopters", adopters);
-  alert("Saved adopter.");
-  renderAdopters();
-}
-function renderAdopters(){
-  const adopters = LS.get("adopters", []);
-  const box = document.getElementById("adopterList");
-  if (!adopters.length){
-    box.innerHTML = `<div class="item"><div class="muted">No adopters yet.</div></div>`;
-    return;
-  }
-  box.innerHTML = adopters.map(a=>{
-    const pic = a.photo ? `<img src="${a.photo}" style="width:56px;height:56px;object-fit:cover;border-radius:12px;border:1px solid var(--border)" />` : "";
-    return `
-      <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
-        <div style="display:flex;gap:12px;align-items:center;">
-          ${pic}
-          <div>
-            <h4 style="margin:0;">${escapeHtml(a.name||"Unnamed adopter")}</h4>
-            <div class="muted">${escapeHtml(a.phone||"")} • ${escapeHtml(a.address||"")}</div>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-
-/* Matching */
-function runMatch(){
-  const type = document.getElementById("matchType").value;
-  const fosters = LS.get("fosters", []);
-  const eligible = fosters.filter(f=>{
-    const remaining = (f.capacity||0) - (f.hosting||0);
-    if (remaining <= 0) return false;
-    if (f.species === "both") return true;
-    return f.species === type;
-  });
-
-  const box = document.getElementById("matchResults");
-  if (!eligible.length){
-    box.innerHTML = `<div class="item"><div class="muted">No fosters currently have space for ${escapeHtml(type)}.</div></div>`;
-    return;
-  }
-
-  box.innerHTML = eligible.map(f=>{
-    const remaining = (f.capacity||0) - (f.hosting||0);
-    return `
-      <div class="item">
-        <h4 style="margin:0;">${escapeHtml(f.name||"")}</h4>
-        <div class="muted">Phone: ${escapeHtml(f.phone||"")} • Space: ${remaining} • Emergency: ${f.emergency?"yes":"no"}</div>
-      </div>
-    `;
-  }).join("");
-}
-
-/* =========================================================
-   Vets / Transport / Pounds / Calendar
-   ========================================================= */
-function saveVet(){
-  const vets = LS.get("vets", []);
-  vets.push({
-    id: uid(),
-    name: document.getElementById("vName").value.trim(),
-    hours: document.getElementById("vHours").value.trim(),
-    address: document.getElementById("vAddress").value.trim(),
-    phone: document.getElementById("vPhone").value.trim(),
-    desex: Number(document.getElementById("vDesex").value || 0),
-    vax: Number(document.getElementById("vVax").value || 0),
-    extra: document.getElementById("vExtra").value.trim()
-  });
-  LS.set("vets", vets);
-  renderVets();
-}
-function renderVets(){
-  const vets = LS.get("vets", []);
-  const box = document.getElementById("vetList");
-  if (!vets.length){
-    box.innerHTML = `<div class="item"><div class="muted">No vets yet.</div></div>`;
-    return;
-  }
-  box.innerHTML = vets.map(v=>`
-    <div class="item">
-      <h4 style="margin:0;">${escapeHtml(v.name||"")}</h4>
-      <div class="muted">${escapeHtml(v.hours||"")} • ${escapeHtml(v.phone||"")}</div>
-      <div class="muted">${escapeHtml(v.address||"")}</div>
-      <div class="muted">Desex: $${(v.desex||0).toFixed(2)} • Vax: $${(v.vax||0).toFixed(2)}</div>
-      ${v.extra ? `<div class="muted">${escapeHtml(v.extra)}</div>` : ""}
-    </div>
-  `).join("");
-}
-
-function saveTransport(){
-  const transport = LS.get("transport", []);
-  transport.push({
-    id: uid(),
-    name: document.getElementById("tName").value.trim(),
-    phone: document.getElementById("tPhone").value.trim(),
-    address: document.getElementById("tAddress").value.trim(),
-    area: document.getElementById("tArea").value.trim()
-  });
-  LS.set("transport", transport);
-  renderTransport();
-}
-function renderTransport(){
-  const transport = LS.get("transport", []);
-  const box = document.getElementById("transportList");
-  if (!transport.length){
-    box.innerHTML = `<div class="item"><div class="muted">No transport companies yet.</div></div>`;
-    return;
-  }
-  box.innerHTML = transport.map(t=>`
-    <div class="item">
-      <h4 style="margin:0;">${escapeHtml(t.name||"")}</h4>
-      <div class="muted">${escapeHtml(t.phone||"")} • ${escapeHtml(t.area||"")}</div>
-      <div class="muted">${escapeHtml(t.address||"")}</div>
-    </div>
-  `).join("");
-}
-
-function savePound(){
-  const pounds = LS.get("pounds", []);
-  const name = document.getElementById("pName").value.trim();
-  const euth = document.getElementById("pEuth").value;
-  pounds.push({
-    id: uid(),
-    name,
-    contact: document.getElementById("pContact").value.trim(),
-    address: document.getElementById("pAddress").value.trim(),
-    euth
-  });
-  LS.set("pounds", pounds);
-
-  // Add reminder day before
-  if (euth){
-    const cal = LS.get("calendar", []);
-    const d = new Date(euth);
-    d.setDate(d.getDate() - 1);
-    const dayBefore = d.toISOString().slice(0,10);
-    cal.push({ id: uid(), date: dayBefore, note: `Reminder: Call pound (${name}) before euthanasia day.`, status: "booked" });
-    LS.set("calendar", cal);
-  }
-  renderPounds();
-  renderCalendar();
-  alert("Saved pound + reminder.");
-}
-function renderPounds(){
-  const pounds = LS.get("pounds", []);
-  const box = document.getElementById("poundList");
-  if (!pounds.length){
-    box.innerHTML = `<div class="item"><div class="muted">No pounds yet.</div></div>`;
-    return;
-  }
-  box.innerHTML = pounds.map(p=>`
-    <div class="item">
-      <h4 style="margin:0;">${escapeHtml(p.name||"")}</h4>
-      <div class="muted">${escapeHtml(p.contact||"")} • euth day: ${escapeHtml(p.euth||"")}</div>
-      <div class="muted">${escapeHtml(p.address||"")}</div>
-    </div>
-  `).join("");
-}
-
-function addCalendar(){
-  const date = document.getElementById("cDate").value;
-  const note = document.getElementById("cNote").value.trim();
-  const status = document.getElementById("cStatus").value;
-  if (!date || !note) return alert("Date and note required.");
-  const cal = LS.get("calendar", []);
-  cal.push({ id: uid(), date, note, status });
-  LS.set("calendar", cal);
-  renderCalendar();
-}
-function renderCalendar(){
-  const cal = LS.get("calendar", []).slice().sort((a,b)=> new Date(a.date) - new Date(b.date));
-  const box = document.getElementById("calendarList");
-  if (!cal.length){
-    box.innerHTML = `<div class="item"><div class="muted">No calendar entries yet.</div></div>`;
-    return;
-  }
-  box.innerHTML = cal.map(c=>{
-    const badge = c.status === "completed"
-      ? `<span class="pill" style="background:rgba(34,197,94,0.15);border-color:rgba(34,197,94,0.35);">Completed</span>`
-      : `<span class="pill" style="background:rgba(43,108,176,0.15);border-color:rgba(43,108,176,0.35);">Booked</span>`;
-    return `
-      <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
-        <div>
-          <h4 style="margin:0;">${escapeHtml(c.date||"")}</h4>
-          <div class="muted">${escapeHtml(c.note||"")}</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;">
-          ${badge}
-          <button class="btn ghost" onclick="removeCalendar('${c.id}')">Remove</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-}
-function removeCalendar(id){
-  const cal = LS.get("calendar", []);
-  LS.set("calendar", cal.filter(x=>x.id!==id));
-  renderCalendar();
-}
-
-/* =========================================================
-   Accounting + CSV export
-   ========================================================= */
-async function addExpense(){
-  const date = document.getElementById("accDate").value || todayISO();
-  const desc = document.getElementById("accDesc").value.trim();
-  const cat = document.getElementById("accCat").value;
-  const amt = parseFloat(document.getElementById("accAmt").value);
-  if (!desc || !isFinite(amt)) return alert("Description and amount required.");
-
-  const receiptFile = document.getElementById("accReceipt").files[0];
-  let receipt = null;
-  if (receiptFile){
-    const data = await fileToDataURL(receiptFile);
-    receipt = { name: receiptFile.name, type: receiptFile.type, data };
-  }
-
-  const exp = LS.get("expenses", []);
-  exp.push({ id: uid(), date, desc, cat, amt: Number(amt.toFixed(2)), receipt });
-  LS.set("expenses", exp);
-  renderExpenses();
-}
-function renderExpenses(){
-  const exp = LS.get("expenses", []).slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
-  const box = document.getElementById("expenseList");
-  if (!exp.length){
-    box.innerHTML = `<div class="item"><div class="muted">No expenses yet.</div></div>`;
-    document.getElementById("accTotal").textContent = "0.00";
-    return;
-  }
-  let total = 0;
-  box.innerHTML = exp.map(e=>{
-    total += e.amt||0;
-    const receiptBtn = e.receipt ? `<button class="btn ghost" onclick="downloadDataURL('${escapeAttr(e.receipt.name)}','${escapeAttr(e.receipt.data)}')">Receipt</button>` : "";
-    return `
-      <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
-        <div>
-          <h4 style="margin:0;">${escapeHtml(e.date)} • ${escapeHtml(e.cat)}</h4>
-          <div class="muted">${escapeHtml(e.desc)} — $${(e.amt||0).toFixed(2)}</div>
-        </div>
-        <div class="btnrow" style="margin:0;">
-          ${receiptBtn}
-          <button class="btn ghost" onclick="removeExpense('${e.id}')">Remove</button>
-        </div>
-      </div>
-    `;
-  }).join("");
-  document.getElementById("accTotal").textContent = total.toFixed(2);
-}
-function removeExpense(id){
-  const exp = LS.get("expenses", []);
-  LS.set("expenses", exp.filter(x=>x.id!==id));
-  renderExpenses();
-}
-
-function exportCSV(){
-  const animals = LS.get("animals", []);
-  const rows = animals.map(a=>({
-    code: a.code, name: a.name, species: a.species, dateRescued: a.dateRescued, age: a.age, sex: a.sex, colour: a.colour,
-    breed: a.breed, location: a.location, movement: a.movement, dietType: a.dietType, dietNotes: a.dietNotes
-  }));
-  const csv = toCSV(rows);
-  downloadBlob("animals_export.csv", csv, "text/csv;charset=utf-8");
-  alert("Exported animals_export.csv");
-}
-function toCSV(rows){
-  if (!rows.length) return "";
-  const cols = Object.keys(rows[0]);
-  const esc = (v)=> `"${String(v ?? "").replace(/"/g,'""')}"`;
-  const lines = [cols.join(",")];
-  rows.forEach(r=> lines.push(cols.map(c=>esc(r[c])).join(",")));
-  return lines.join("\\n");
-}
-
-/* =========================================================
-   Forms / Donations / Fundraising / Directory
-   ========================================================= */
-async function saveForm(){
-  const title = document.getElementById("formTitle").value.trim();
-  const file = document.getElementById("formFile").files[0];
-  if (!title || !file) return alert("Title and file required.");
-  const forms = LS.get("forms", []);
-  forms.push({ id: uid(), title, name: file.name, type: file.type, data: await fileToDataURL(file) });
-  LS.set("forms", forms);
-  renderForms();
-}
-function renderForms(){
-  const forms = LS.get("forms", []);
-  const box = document.getElementById("formsList");
-  if (!forms.length){
-    box.innerHTML = `<div class="item"><div class="muted">No forms uploaded yet.</div></div>`;
-    return;
-  }
-  box.innerHTML = forms.map(f=>`
-    <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
-      <div>
-        <h4 style="margin:0;">${escapeHtml(f.title)}</h4>
-        <div class="muted">${escapeHtml(f.name||"")}</div>
-      </div>
-      <div class="btnrow" style="margin:0;">
-        <button class="btn ghost" onclick="downloadDataURL('${escapeAttr(f.name||"form")}','${escapeAttr(f.data||"")}')">Download</button>
-        <button class="btn ghost" onclick="removeById('forms','${f.id}', renderForms)">Remove</button>
-      </div>
-    </div>
-  `).join("");
-}
-
-function saveDonation(){
-  const donations = LS.get("donations", []);
-  donations.push({
-    id: uid(),
-    name: document.getElementById("dName").value.trim(),
-    contact: document.getElementById("dContact").value.trim(),
-    phone: document.getElementById("dPhone").value.trim(),
-    address: document.getElementById("dAddress").value.trim(),
-    date: document.getElementById("dDate").value || todayISO(),
-    notes: document.getElementById("dNotes").value.trim(),
-    receipt: document.getElementById("dReceipt").value === "yes"
-  });
-  LS.set("donations", donations);
-  renderDonations();
-}
-function renderDonations(){
-  const donations = LS.get("donations", []);
-  const box = document.getElementById("donationsList");
-  if (!donations.length){
-    box.innerHTML = `<div class="item"><div class="muted">No donations yet.</div></div>`;
-    return;
-  }
-  box.innerHTML = donations.map(d=>`
-    <div class="item">
-      <h4 style="margin:0;">${escapeHtml(d.name||"")}</h4>
-      <div class="muted">${escapeHtml(d.date||"")} • ${escapeHtml(d.phone||"")} • receipt: ${d.receipt?"yes":"no"}</div>
-      <div class="muted">${escapeHtml(d.notes||"")}</div>
-    </div>
-  `).join("");
-}
-
-function saveFundraiser(){
-  const fund = LS.get("fundraisers", []);
-  fund.push({ id: uid(), name: document.getElementById("frName").value.trim(), date: document.getElementById("frDate").value, desc: document.getElementById("frDesc").value.trim() });
-  LS.set("fundraisers", fund);
-  renderFundraisers();
-}
-function renderFundraisers(){
-  const fund = LS.get("fundraisers", []);
-  const box = document.getElementById("fundList");
-  if (!fund.length){
-    box.innerHTML = `<div class="item"><div class="muted">No events yet.</div></div>`;
-    return;
-  }
-  box.innerHTML = fund.map(f=>`
-    <div class="item">
-      <h4 style="margin:0;">${escapeHtml(f.name||"")}</h4>
-      <div class="muted">${escapeHtml(f.date||"")}</div>
-      <div class="muted">${escapeHtml(f.desc||"")}</div>
-    </div>
-  `).join("");
-}
-
-async function saveMerch(){
-  const merch = LS.get("merch", []);
-  const name = document.getElementById("mName").value.trim();
-  const price = parseFloat(document.getElementById("mPrice").value);
-  const file = document.getElementById("mPhoto").files[0];
-  if (!name || !isFinite(price) || !file) return alert("Name, price and photo required.");
-  merch.push({ id: uid(), name, price: Number(price.toFixed(2)), photo: await fileToDataURL(file) });
-  LS.set("merch", merch);
-  renderMerch();
-}
-function renderMerch(){
-  const merch = LS.get("merch", []);
-  const box = document.getElementById("merchList");
-  if (!merch.length){
-    box.innerHTML = `<div class="item"><div class="muted">No merch yet.</div></div>`;
-    return;
-  }
-  box.innerHTML = merch.map(m=>`
-    <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
-      <div style="display:flex;gap:12px;align-items:center;">
-        <img src="${m.photo}" style="width:56px;height:56px;object-fit:cover;border-radius:12px;border:1px solid var(--border)" />
-        <div>
-          <h4 style="margin:0;">${escapeHtml(m.name)}</h4>
-          <div class="muted">$${(m.price||0).toFixed(2)}</div>
-        </div>
-      </div>
-      <button class="btn ghost" onclick="removeById('merch','${m.id}', renderMerch)">Remove</button>
-    </div>
-  `).join("");
-}
-
-function toggleRdNote(){
-  document.getElementById("rdNoteBox").style.display =
-    document.getElementById("rdUse").value === "dont" ? "block" : "none";
-}
-function saveRescueDirectory(){
-  const dir = LS.get("directory", []);
-  dir.push({
-    id: uid(),
-    name: document.getElementById("rdName").value.trim(),
-    contact: document.getElementById("rdContact").value.trim(),
-    area: document.getElementById("rdArea").value.trim(),
-    species: document.getElementById("rdSpecies").value.trim(),
-    ease: document.getElementById("rdEase").value,
-    use: document.getElementById("rdUse").value,
-    note: document.getElementById("rdNote").value.trim()
-  });
-  LS.set("directory", dir);
-  renderDirectory();
-}
-function renderDirectory(){
-  const dir = LS.get("directory", []);
-  const box = document.getElementById("directoryList");
-  if (!dir.length){
-    box.innerHTML = `<div class="item"><div class="muted">No rescues added yet.</div></div>`;
-    return;
-  }
-  box.innerHTML = dir.map(r=>{
-    const color = r.use === "dont" ? "rgba(239,68,68,0.35)" : "rgba(34,197,94,0.35)";
-    return `
-      <div class="item" style="border-left:6px solid ${color};">
-        <h4 style="margin:0;">${escapeHtml(r.name||"")}</h4>
-        <div class="muted">${escapeHtml(r.contact||"")}</div>
-        <div class="muted">Area: ${escapeHtml(r.area||"")} • Focus: ${escapeHtml(r.species||"")} • Ease: ${escapeHtml(r.ease||"")}/5</div>
-        ${r.use==="dont" ? `<div class="muted"><b>DON’T USE:</b> ${escapeHtml(r.note||"")}</div>` : ""}
-      </div>
-    `;
-  }).join("");
-}
-
-/* =========================================================
-   Dashboard
-   ========================================================= */
-function renderDashboardLite(){
-  const animals = LS.get("animals", []);
-  const active = animals.filter(a=>a.status!=="archived");
-  document.getElementById("dashTotal").textContent = String(active.length);
-  document.getElementById("dashFoster").textContent = String(active.filter(a=>a.location==="foster").length);
-  document.getElementById("dashAdopted").textContent = String(active.filter(a=>a.location==="adopted").length);
-}
-
-function renderDashboard(){
-  runAutoArchive();
-  const animals = LS.get("animals", []);
-  const active = animals.filter(a=>a.status!=="archived");
-  const inFoster = active.filter(a=>a.location==="foster").length;
-  const adopted = active.filter(a=>a.location==="adopted").length;
-
-  document.getElementById("dashTotal").textContent = String(active.length);
-  document.getElementById("dashFoster").textContent = String(inFoster);
-  document.getElementById("dashAdopted").textContent = String(adopted);
-
-  const sorted = active.slice().sort((a,b)=> new Date(a.dateRescued||0) - new Date(b.dateRescued||0)).slice(0,10);
-  const box = document.getElementById("dashLongest");
-  box.innerHTML = sorted.length ? sorted.map(a=>`
-    <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
-      <div>
-        <h4 style="margin:0;">${escapeHtml(a.code)} • ${escapeHtml(a.name||"Unnamed")}</h4>
-        <div class="muted">Rescued: ${escapeHtml(a.dateRescued||"")} • Location: ${escapeHtml(a.location||"")}</div>
-      </div>
-      <button class="btn ghost" onclick="openEdit('${a.id}')">Edit</button>
-    </div>
-  `).join("") : `<div class="item"><div class="muted">No animals yet.</div></div>`;
-}
-
-/* =========================================================
-   Backup import/export (JSON)
-   ========================================================= */
-function exportBackup(){
-  const payload = {
-    rescue_info: LS.get("rescue_info", {}),
-    animals: LS.get("animals", []),
-    archive: LS.get("archive", []),
-    fosters: LS.get("fosters", []),
-    adopters: LS.get("adopters", []),
-    staff: LS.get("staff", []),
-    vets: LS.get("vets", []),
-    transport: LS.get("transport", []),
-    pounds: LS.get("pounds", []),
-    calendar: LS.get("calendar", []),
-    expenses: LS.get("expenses", []),
-    forms: LS.get("forms", []),
-    donations: LS.get("donations", []),
-    fundraisers: LS.get("fundraisers", []),
-    merch: LS.get("merch", []),
-    directory: LS.get("directory", [])
-  };
-  downloadBlob("cartmills_backup.json", JSON.stringify(payload, null, 2), "application/json");
-}
-
-function importBackup(){
-  const inp = document.getElementById("importFile");
-  inp.onchange = async () => {
-    const file = inp.files[0];
-    if (!file) return;
-    try{
-      const text = await file.text();
-      const data = JSON.parse(text);
-      Object.keys(data).forEach(k => LS.set(k, data[k]));
-      alert("Imported backup.");
-     (async () => {
-  try {
-    await CAR_loadShared();   // pull shared data first
-  } catch (e) {
-    alert("Shared DB load failed: " + e.message);
-  }
-  (async () => {
-  try {
-    await CAR_loadShared();   // pull shared data from Google Sheets first
-  } catch (e) {
-    console.warn("Shared DB load failed:", e);
-  }
-  boot();                     // then render the app
-})();
-
-})();
-
-    } catch(err){
-      alert("Import failed: " + err.message);
-    } finally {
-      inp.value = "";
-    }
-  };
-  inp.click();
-}
-
-/* =========================================================
-   Utilities
-   ========================================================= */
-function removeById(key, id, rerender){
-  const arr = LS.get(key, []);
-  LS.set(key, arr.filter(x=>x.id!==id));
-  rerender();
-}
-function downloadBlob(filename, content, mime){
-  const blob = new Blob([content], {type: mime});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-function downloadDataURL(filename, dataURL){
-  if (!dataURL) return alert("No file data.");
-  const a = document.createElement("a");
-  a.href = dataURL;
-  a.download = filename || "download";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-function escapeHtml(s){ return String(s ?? "").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m])); }
-function escapeAttr(s){ return escapeHtml(s).replace(/"/g,"&quot;"); }
-
-/* =========================================================
-   Boot
-   ========================================================= */
-function boot(){
-  // Theme / contrast restore
-  const theme = LS.get("theme", "light");
-  const contrast = LS.get("contrast", "normal");
-  document.documentElement.setAttribute("data-theme", theme);
-  document.documentElement.setAttribute("data-contrast", contrast);
-
-  loadBrand();
-
-  // Defaults
-  document.getElementById("aRescued").value = todayISO();
-
-  // Render all
-  refreshMotherDropdown();
-  renderAnimalsList();
-  renderArchive();
-  renderFosters();
-  renderStaff();
-  renderAdopters();
-  renderVets();
-  renderTransport();
-  renderPounds();
-  renderCalendar();
-  renderExpenses();
-  renderForms();
-  renderDonations();
-  renderFundraisers();
-  renderMerch();
-  renderDirectory();
-  renderDashboard();
-
-  // Start on dashboard
-  showSection("dashboard");
-}
-boot();
-</script>
-
-<div class="car_overlay" id="carLoginOverlay">
-  <div class="car_modal">
-    <h3 id="carLoginTitle">Login</h3>
-    <p id="carLoginHint">Enter your login details.</p>
-
-    <div id="carLoginForm">
-      <div class="row">
-        <div class="field full">
-          <label>Email / Username</label>
-          <input id="carLoginEmail" type="text" placeholder="admin" />
-        </div>
-        <div class="field full">
-          <label>Password</label>
-          <input id="carLoginPassword" type="password" placeholder="admin" />
-        </div>
-      </div>
-      <div class="btnrow">
-        <button class="btn primary" onclick="CAR_Auth.login()">Login</button>
-      </div>
-      <div class="hr"></div>
-      <div class="muted">Default admin: <b>admin</b> / <b>admin</b></div>
-    </div>
-
-    <div id="carPwChange" style="display:none;">
-      <div class="row">
-        <div class="field full">
-          <label>New Password</label>
-          <input id="carNewPw1" type="password" />
-        </div>
-        <div class="field full">
-          <label>Confirm New Password</label>
-          <input id="carNewPw2" type="password" />
-        </div>
-      </div>
-      <div class="btnrow">
-        <button class="btn primary" onclick="CAR_Auth.changeMyPassword()">Save New Password</button>
-      </div>
-      <div class="muted" style="margin-top:8px;">
-        First login requires password change.
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<script>
-/* =========================================================
-   CARTMILLS ADD-ON: Login + Permissions + Live Map
-   - Default admin/admin
-   - Staff login: email + Helper123 (forced change on first login)
-   - Permissions hide nav items
-   - Live map: fosters green, vets blue, transport radius red, pounds purple
-   ========================================================= */
-
-const CAR = {
-  LS: {
-    get(k, fb){ try{ return JSON.parse(localStorage.getItem(k) || JSON.stringify(fb)); }catch{ return fb; } },
-    set(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
-  },
-  SS: {
-    get(k, fb){ try{ return JSON.parse(sessionStorage.getItem(k) || JSON.stringify(fb)); }catch{ return fb; } },
-    set(k, v){ sessionStorage.setItem(k, JSON.stringify(v)); },
-    del(k){ sessionStorage.removeItem(k); }
-  }
-};
-
-const CAR_SECTIONS = [
-  "dashboard","map","rescue","animals_list","animals_add","animals_edit","archive",
-  "fosters","adopters","email_match","vets","transport","pounds","calendar",
-  "accounting","forms","donations","fundraising","directory"
-];
-
-async function CAR_sha256(text){
-  const enc = new TextEncoder().encode(text);
-  const buf = await crypto.subtle.digest("SHA-256", enc);
-  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
-}
-
-function CAR_escapeHtml(s){ return String(s ?? "").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m])); }
-
-const CAR_Auth = {
+const AUTH = {
   usersKey: "car_users_v1",
   sessionKey: "car_session_v1",
 
-  async ensureDefaults(){
-    let users = CAR.LS.get(this.usersKey, []);
-    if (users.length) return;
+  async sha256(text){
+    const enc = new TextEncoder().encode(text);
+    const buf = await crypto.subtle.digest("SHA-256", enc);
+    return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+  },
 
+  async ensureDefaults(){
+    let users = LS.get(this.usersKey, []);
+    if (users.length) return;
     users = [{
-      email: "admin",
-      display: "Admin",
-      role: "admin",
-      pwHash: await CAR_sha256("admin"),
-      mustChange: false,
-      permissions: ["*"]
+      email:"admin", display:"Admin", role:"admin",
+      pwHash: await this.sha256("admin"),
+      mustChange:false,
+      permissions:["*"]
     }];
-    CAR.LS.set(this.usersKey, users);
+    localStorage.setItem(this.usersKey, JSON.stringify(users));
   },
 
   current(){
-    const email = CAR.SS.get(this.sessionKey, "");
+    const email = SS.get(this.sessionKey, "");
     if (!email) return null;
-    const users = CAR.LS.get(this.usersKey, []);
+    const users = LS.get(this.usersKey, []);
     return users.find(u => (u.email||"").toLowerCase() === String(email).toLowerCase()) || null;
   },
 
@@ -2795,79 +532,68 @@ const CAR_Auth = {
   },
 
   showLogin(){
-    document.getElementById("carLoginOverlay").classList.add("show");
-    document.getElementById("carLoginForm").style.display = "";
-    document.getElementById("carPwChange").style.display = "none";
-    document.getElementById("carLoginTitle").textContent = "Login";
-    document.getElementById("carLoginHint").textContent = "Enter your login details.";
+    document.getElementById("loginOverlay").classList.add("show");
+    document.getElementById("loginForm").style.display = "";
+    document.getElementById("pwChange").style.display = "none";
+    document.getElementById("adminArea").style.display = "none";
   },
 
   showPwChange(){
-    document.getElementById("carLoginOverlay").classList.add("show");
-    document.getElementById("carLoginForm").style.display = "none";
-    document.getElementById("carPwChange").style.display = "";
-    document.getElementById("carLoginTitle").textContent = "Change Password";
-    document.getElementById("carLoginHint").textContent = "First login requires password change.";
+    document.getElementById("loginOverlay").classList.add("show");
+    document.getElementById("loginForm").style.display = "none";
+    document.getElementById("pwChange").style.display = "";
+    document.getElementById("adminArea").style.display = "none";
   },
 
   hideOverlay(){
-    document.getElementById("carLoginOverlay").classList.remove("show");
+    document.getElementById("loginOverlay").classList.remove("show");
   },
 
-  async login(){
-    const email = document.getElementById("carLoginEmail").value.trim();
-    const pw = document.getElementById("carLoginPassword").value;
+  async login(email, pw){
+    email = (email||"").trim();
     if (!email || !pw) return alert("Enter email and password.");
-
-    const users = CAR.LS.get(this.usersKey, []);
+    const users = LS.get(this.usersKey, []);
     const u = users.find(x => (x.email||"").toLowerCase() === email.toLowerCase());
     if (!u) return alert("User not found.");
-
-    const h = await CAR_sha256(pw);
+    const h = await this.sha256(pw);
     if (h !== u.pwHash) return alert("Incorrect password.");
 
-    CAR.SS.set(this.sessionKey, u.email);
+    SS.set(this.sessionKey, u.email);
 
     if (u.mustChange && u.role !== "admin"){
       this.showPwChange();
       return;
     }
-
     this.hideOverlay();
-    this.applyNavPermissions();
-    CAR_Map.renderManager();
+    this.applyNav();
+    renderAll();
   },
 
-  async changeMyPassword(){
+  async changeMyPassword(p1, p2){
     const u = this.current();
     if (!u) return;
-
-    const p1 = document.getElementById("carNewPw1").value;
-    const p2 = document.getElementById("carNewPw2").value;
     if (!p1 || p1.length < 6) return alert("Password must be at least 6 characters.");
     if (p1 !== p2) return alert("Passwords do not match.");
 
-    const users = CAR.LS.get(this.usersKey, []);
+    const users = LS.get(this.usersKey, []);
     const idx = users.findIndex(x => (x.email||"").toLowerCase() === (u.email||"").toLowerCase());
     if (idx === -1) return;
 
-    users[idx].pwHash = await CAR_sha256(p1);
+    users[idx].pwHash = await this.sha256(p1);
     users[idx].mustChange = false;
-    CAR.LS.set(this.usersKey, users);
+    localStorage.setItem(this.usersKey, JSON.stringify(users));
 
     this.hideOverlay();
-    this.applyNavPermissions();
-    CAR_Map.renderManager();
+    this.applyNav();
     alert("Password updated.");
   },
 
   logout(){
-    CAR.SS.del(this.sessionKey);
+    SS.del(this.sessionKey);
     this.showLogin();
   },
 
-  applyNavPermissions(){
-    // Hide/disable sidebar buttons by permission.
+  applyNav(){
     document.querySelectorAll("#nav button[data-section]").forEach(btn=>{
       const key = btn.dataset.section;
       const ok = this.can(key);
@@ -2876,402 +602,594 @@ const CAR_Auth = {
     });
   },
 
-  // Admin user mgmt lives inside the Map Manager panel (to avoid heavy HTML patching)
-  async upsertUser({email, display, role, permissions}){
+  async upsertStaff(email, display){
     if (!this.isAdmin()) return alert("Admin only.");
     email = (email||"").trim().toLowerCase();
     if (!email) return alert("Email required.");
-
-    let users = CAR.LS.get(this.usersKey, []);
+    const users = LS.get(this.usersKey, []);
     const idx = users.findIndex(u => (u.email||"").toLowerCase() === email);
-
-    if (role === "admin"){
-      const existing = idx >= 0 ? users[idx] : null;
-      users[idx >= 0 ? idx : users.length] = {
-        email, display: display || "Admin", role: "admin",
-        pwHash: existing ? existing.pwHash : await CAR_sha256("admin"),
-        mustChange: existing ? existing.mustChange : false,
-        permissions: ["*"]
-      };
-    } else {
-      const existing = idx >= 0 ? users[idx] : null;
-      users[idx >= 0 ? idx : users.length] = {
-        email, display: display || email, role: "staff",
-        pwHash: existing ? existing.pwHash : await CAR_sha256("Helper123"),
-        mustChange: existing ? existing.mustChange : true,
-        permissions: permissions && permissions.length ? permissions : ["dashboard","map","animals_list","animals_add","animals_edit","fosters","vets","transport","pounds","calendar"]
-      };
-    }
-    CAR.LS.set(this.usersKey, users);
-    this.applyNavPermissions();
-    CAR_Map.renderManager();
-    alert("User saved.");
+    const existing = idx>=0 ? users[idx] : null;
+    const perms = ["dashboard","animals_list","animals_add","fosters","vets","pounds","calendar","accounting","rescue"];
+    const staff = {
+      email,
+      display: display || email,
+      role:"staff",
+      pwHash: existing ? existing.pwHash : await this.sha256("Helper123"),
+      mustChange: existing ? existing.mustChange : true,
+      permissions: perms
+    };
+    if (idx>=0) users[idx]=staff; else users.push(staff);
+    localStorage.setItem(this.usersKey, JSON.stringify(users));
+    alert("Staff saved. Default password is Helper123 (forced change).");
+    this.renderAdminArea();
   },
 
-  async resetStaffPassword(email){
+  async resetStaff(email){
     if (!this.isAdmin()) return alert("Admin only.");
     email = (email||"").trim().toLowerCase();
-    if (!email) return alert("Email required.");
-    const users = CAR.LS.get(this.usersKey, []);
+    const users = LS.get(this.usersKey, []);
     const idx = users.findIndex(u => (u.email||"").toLowerCase() === email);
-    if (idx === -1) return alert("User not found.");
-    if (users[idx].role === "admin") return alert("Admin reset not allowed here.");
-    users[idx].pwHash = await CAR_sha256("Helper123");
+    if (idx===-1) return alert("User not found.");
+    if (users[idx].role === "admin") return alert("Not for admin.");
+    users[idx].pwHash = await this.sha256("Helper123");
     users[idx].mustChange = true;
-    CAR.LS.set(this.usersKey, users);
-    CAR_Map.renderManager();
-    alert("Reset to Helper123 (forced change on next login).");
+    localStorage.setItem(this.usersKey, JSON.stringify(users));
+    alert("Reset to Helper123 (forced change).");
+    this.renderAdminArea();
   },
 
   deleteUser(email){
     if (!this.isAdmin()) return alert("Admin only.");
     email = (email||"").trim().toLowerCase();
     if (email === "admin") return alert("Cannot delete admin.");
-    if (!confirm("Delete user: " + email + " ?")) return;
-    const users = CAR.LS.get(this.usersKey, []);
-    CAR.LS.set(this.usersKey, users.filter(u => (u.email||"").toLowerCase() !== email));
-    this.applyNavPermissions();
-    CAR_Map.renderManager();
-  }
-};
-
-const CAR_Map = {
-  map: null,
-  layers: { fosters: null, vets: null, pounds: null, transport: null },
-
-  parseCenter(){
-    const raw = (document.getElementById("car_mapCenter")?.value || "").trim();
-    if (!raw) return [-27.4698, 153.0251];
-    const parts = raw.split(",").map(s=>parseFloat(s.trim()));
-    if (parts.length !== 2 || !isFinite(parts[0]) || !isFinite(parts[1])) return [-27.4698, 153.0251];
-    return [parts[0], parts[1]];
+    if (!confirm("Delete " + email + " ?")) return;
+    const users = LS.get(this.usersKey, []);
+    localStorage.setItem(this.usersKey, JSON.stringify(users.filter(u => (u.email||"").toLowerCase() !== email)));
+    this.renderAdminArea();
   },
 
-  init(forceRecenter){
-    if (typeof L === "undefined"){
-      alert("Map library failed to load. If you opened this as a file, host it (https) and try again.");
+  renderAdminArea(){
+    const box = document.getElementById("adminArea");
+    if (!this.isAdmin()){
+      box.style.display = "none";
       return;
     }
-    const center = this.parseCenter();
-    const zoom = Math.max(3, Math.min(18, parseInt(document.getElementById("car_mapZoom")?.value || "10", 10)));
-
-    if (!this.map){
-      this.map = L.map("car_map", { zoomControl: true }).setView(center, zoom);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: "&copy; OpenStreetMap contributors"
-      }).addTo(this.map);
-    } else if (forceRecenter){
-      this.map.setView(center, zoom);
-    }
-    this.refresh();
-    setTimeout(()=>{ try{ this.map.invalidateSize(); }catch{} }, 100);
-  },
-
-  _clearLayers(){
-    Object.keys(this.layers).forEach(k=>{
-      if (this.layers[k]) { try{ this.map.removeLayer(this.layers[k]); }catch{} }
-      this.layers[k] = null;
-    });
-  },
-
-  _getData(){
-    const fosters = (JSON.parse(localStorage.getItem("fosters") || "[]") || []).filter(x=>x && x.lat && x.lng);
-    const vets = (JSON.parse(localStorage.getItem("vets") || "[]") || []).filter(x=>x && x.lat && x.lng);
-    const pounds = (JSON.parse(localStorage.getItem("pounds") || "[]") || []).filter(x=>x && x.lat && x.lng);
-    const transport = (JSON.parse(localStorage.getItem("transport") || "[]") || []).filter(x=>x && x.lat && x.lng);
-    return { fosters, vets, pounds, transport };
-  },
-
-  refresh(){
-    if (!this.map) return;
-    this._clearLayers();
-
-    const {fosters, vets, pounds, transport} = this._getData();
-
-    const fosterLayer = L.layerGroup(fosters.map(f =>
-      L.circleMarker([f.lat, f.lng], { radius: 8, color: "#16a34a", fillColor: "#16a34a", fillOpacity: 0.8, weight: 2 })
-        .bindPopup(`<b>Foster:</b> ${CAR_escapeHtml(f.name||"")}<br>${CAR_escapeHtml(f.phone||"")}`)
-    ));
-    const vetLayer = L.layerGroup(vets.map(v =>
-      L.circleMarker([v.lat, v.lng], { radius: 8, color: "#2563eb", fillColor: "#2563eb", fillOpacity: 0.8, weight: 2 })
-        .bindPopup(`<b>Vet:</b> ${CAR_escapeHtml(v.name||"")}<br>${CAR_escapeHtml(v.phone||"")}`)
-    ));
-    const poundLayer = L.layerGroup(pounds.map(p =>
-      L.circleMarker([p.lat, p.lng], { radius: 8, color: "#7c3aed", fillColor: "#7c3aed", fillOpacity: 0.8, weight: 2 })
-        .bindPopup(`<b>Pound:</b> ${CAR_escapeHtml(p.name||"")}<br>${CAR_escapeHtml(p.contact||"")}<br>Euth: ${CAR_escapeHtml(p.euthDay||p.euth||"")}`)
-    ));
-    const transportLayer = L.layerGroup(transport.flatMap(t => {
-      const radiusM = (Number(t.radiusKm||t.radius||50) || 0) * 1000;
-      const circle = L.circle([t.lat, t.lng], { radius: radiusM, color:"#dc2626", fillColor:"#dc2626", fillOpacity: 0.12, weight: 2 })
-        .bindPopup(`<b>Transport:</b> ${CAR_escapeHtml(t.name||"")}<br>${CAR_escapeHtml(t.phone||"")}<br>Radius: ${CAR_escapeHtml(String(t.radiusKm||t.radius||50))} km`);
-      const dot = L.circleMarker([t.lat, t.lng], { radius: 7, color:"#dc2626", fillColor:"#dc2626", fillOpacity: 0.85, weight: 2 })
-        .bindPopup(`<b>Transport:</b> ${CAR_escapeHtml(t.name||"")}<br>${CAR_escapeHtml(t.phone||"")}`);
-      return [circle, dot];
-    }));
-
-    fosterLayer.addTo(this.map);
-    vetLayer.addTo(this.map);
-    poundLayer.addTo(this.map);
-    transportLayer.addTo(this.map);
-
-    this.layers = {fosters: fosterLayer, vets: vetLayer, pounds: poundLayer, transport: transportLayer};
-
-    const all = [
-      ...fosters.map(f=>[f.lat,f.lng]),
-      ...vets.map(v=>[v.lat,v.lng]),
-      ...pounds.map(p=>[p.lat,p.lng]),
-      ...transport.map(t=>[t.lat,t.lng])
-    ];
-    if (all.length){
-      const bounds = L.latLngBounds(all.map(x=>L.latLng(x[0],x[1])));
-      this.map.fitBounds(bounds.pad(0.2));
-    }
-  },
-
-  async geocode(address){
-    const url = "https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(address);
-    const res = await fetch(url, { headers: { "Accept":"application/json" } });
-    const data = await res.json();
-    if (!data || !data.length) return null;
-    return { lat: Number(data[0].lat), lng: Number(data[0].lon) };
-  },
-
-  _saveArray(key, arr){
-    localStorage.setItem(key, JSON.stringify(arr));
-  },
-
-  async renderManager(){
-    const box = document.getElementById("car_mapManager");
-    if (!box) return;
-
-    const fosters = JSON.parse(localStorage.getItem("fosters") || "[]") || [];
-    const vets = JSON.parse(localStorage.getItem("vets") || "[]") || [];
-    const pounds = JSON.parse(localStorage.getItem("pounds") || "[]") || [];
-    const transport = JSON.parse(localStorage.getItem("transport") || "[]") || [];
-
-    const u = CAR_Auth.current();
-    const admin = CAR_Auth.isAdmin();
-
-    const renderTable = (title, key, arr, opts={}) => {
-      const rows = arr.map((r, i)=>{
-        const name = CAR_escapeHtml(r.name || r.company || r.clinic || r.pound || "");
-        const addr = CAR_escapeHtml(r.address || "");
-        const lat = Number(r.lat || 0);
-        const lng = Number(r.lng || 0);
-        const radius = Number(r.radiusKm || r.radius || 50);
-
-        return `
-          <div class="item">
-            <h4 style="margin:0;">${title} #${i+1}: ${name || "<span class='muted'>Unnamed</span>"}</h4>
-            <div class="muted">${addr || "<span class='muted'>No address</span>"}</div>
-
-            <div class="row" style="margin-top:10px;">
-              <div class="field sm"><label>Lat</label><input ${admin?"":"disabled"} data-k="${key}" data-i="${i}" data-f="lat" value="${lat || ""}" /></div>
-              <div class="field sm"><label>Lng</label><input ${admin?"":"disabled"} data-k="${key}" data-i="${i}" data-f="lng" value="${lng || ""}" /></div>
-              ${opts.radius ? `<div class="field sm"><label>Radius (km)</label><input ${admin?"":"disabled"} data-k="${key}" data-i="${i}" data-f="radiusKm" value="${radius || 50}" /></div>` : `<div class="field sm"></div>`}
-              <div class="field md" style="display:flex; align-items:end; gap:10px;">
-                <button class="btn ghost" ${admin?"":"disabled"} onclick="CAR_Map.autoLocate('${key}', ${i})">Auto-locate</button>
-                <button class="btn primary" ${admin?"":"disabled"} onclick="CAR_Map.saveRow('${key}', ${i})">Save</button>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join("") || `<div class="item"><div class="muted">No ${title.toLowerCase()} records yet.</div></div>`;
-
-      return `
-        <div class="item" style="background: transparent; border-style:dashed;">
-          <h4 style="margin:0 0 6px 0;">${title}</h4>
-          <div class="muted">${admin ? "Admin can edit coordinates." : "View only (admin can edit)."} </div>
-        </div>
-        ${rows}
-      `;
-    };
-
-    const users = CAR.LS.get(CAR_Auth.usersKey, []);
-
+    const users = LS.get(this.usersKey, []).filter(u=>u.email!=="admin");
+    box.style.display = "";
     box.innerHTML = `
-      ${renderTable("Fosters", "fosters", fosters)}
-      ${renderTable("Vets", "vets", vets)}
-      ${renderTable("Pounds", "pounds", pounds)}
-      ${renderTable("Transport (coverage)", "transport", transport, {radius:true})}
       <div class="hr"></div>
-      <div class="item" style="background: transparent; border-style:dashed;">
-        <h4 style="margin:0 0 6px 0;">Admin: User Accounts</h4>
-        <div class="muted">Create staff accounts (default password <b>Helper123</b> + forced change on first login). Admin stays <b>admin/admin</b> unless you change it manually by logging in as admin and changing password (optional).</div>
-      </div>
-
-      ${admin ? `
-      <div class="item">
-        <div class="row">
-          <div class="field md"><label>Staff email (login)</label><input id="car_uEmail" placeholder="helper@cartmills.org" /></div>
-          <div class="field md"><label>Display name</label><input id="car_uDisplay" placeholder="Helper Name" /></div>
-          <div class="field md"><label>Role</label>
-            <select id="car_uRole">
-              <option value="staff">Staff</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-          <div class="field full">
-            <label>Permissions (sections)</label>
-            <div class="muted">Tick what they can see. (Admin always gets all.)</div>
-            <div class="row" style="margin-top:8px;">
-              ${CAR_SECTIONS.map(s=>`
-                <div class="field sm">
-                  <label style="display:flex; gap:8px; align-items:center; margin:0;">
-                    <input type="checkbox" class="car_perm" value="${s}" checked>
-                    <span>${CAR_escapeHtml(s.replace(/_/g," "))}</span>
-                  </label>
-                </div>
-              `).join("")}
-            </div>
-          </div>
-        </div>
-        <div class="btnrow">
-          <button class="btn primary" onclick="CAR_Map.saveUserFromForm()">Add / Update User</button>
-          <button class="btn ghost" onclick="CAR_Map.resetUserFromForm()">Reset Password to Helper123</button>
+      <div class="muted"><b>Admin: Create staff logins</b></div>
+      <div class="row" style="margin-top:8px">
+        <div class="field md"><label>Staff email</label><input id="admEmail" placeholder="staff@cartmills.org"></div>
+        <div class="field md"><label>Display name</label><input id="admDisplay" placeholder="Helper"></div>
+        <div class="field md" style="display:flex;align-items:end;gap:10px">
+          <button class="btn primary" id="admSave">Add/Update</button>
+          <button class="btn ghost" id="admReset">Reset PW</button>
         </div>
       </div>
-      <div class="list">
+      <div class="list" style="margin-top:10px">
         ${users.map(u=>`
-          <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
+          <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center">
             <div>
-              <h4 style="margin:0;">${CAR_escapeHtml(u.email||"")}</h4>
-              <div class="muted">${CAR_escapeHtml(u.display||"")} • role: ${CAR_escapeHtml(u.role||"")} • must change: ${u.mustChange?"yes":"no"}</div>
-              <div class="muted">Permissions: ${u.role==="admin" ? "ALL" : CAR_escapeHtml((u.permissions||[]).join(", "))}</div>
+              <h4 style="margin:0">${escapeHtml(u.email)}</h4>
+              <div class="muted">${escapeHtml(u.display||"")} • must change: ${u.mustChange?"yes":"no"}</div>
             </div>
-            <div class="btnrow" style="margin:0;">
-              <button class="btn ghost" onclick="CAR_Map.fillUserForm('${CAR_escapeHtml(u.email||"")}')">Edit</button>
-              <button class="btn ghost" onclick="CAR_Auth.deleteUser('${CAR_escapeHtml(u.email||"")}')">Delete</button>
+            <div class="btnrow" style="margin:0">
+              <button class="btn ghost" onclick="AUTH.resetStaff('${escapeAttr(u.email)}')">Reset PW</button>
+              <button class="btn ghost" onclick="AUTH.deleteUser('${escapeAttr(u.email)}')">Delete</button>
             </div>
           </div>
-        `).join("") || `<div class="item"><div class="muted">No users.</div></div>`}
+        `).join("") || `<div class="item"><div class="muted">No staff yet.</div></div>`}
       </div>
-      ` : `<div class="item"><div class="muted">You are not admin.</div></div>`}
     `;
-
-    if (this.map) this.refresh();
-  },
-
-  async autoLocate(key, idx){
-    if (!CAR_Auth.isAdmin()) return;
-    const arr = JSON.parse(localStorage.getItem(key) || "[]") || [];
-    const r = arr[idx];
-    if (!r) return;
-    const addr = (r.address || "").trim();
-    if (!addr) return alert("No address saved for this record.");
-    try{
-      const pos = await this.geocode(addr);
-      if (!pos) return alert("No results found.");
-      r.lat = Number(pos.lat.toFixed(6));
-      r.lng = Number(pos.lng.toFixed(6));
-      arr[idx] = r;
-      this._saveArray(key, arr);
-      this.renderManager();
-      this.refresh();
-      alert("Coordinates saved (check accuracy).");
-    } catch(err){
-      alert("Auto-locate failed. If you opened this as a file, host it (https) and try again.\n" + err.message);
-    }
-  },
-
-  saveRow(key, idx){
-    if (!CAR_Auth.isAdmin()) return;
-    const arr = JSON.parse(localStorage.getItem(key) || "[]") || [];
-    const r = arr[idx];
-    if (!r) return;
-
-    const latInput = document.querySelector(`input[data-k="${key}"][data-i="${idx}"][data-f="lat"]`);
-    const lngInput = document.querySelector(`input[data-k="${key}"][data-i="${idx}"][data-f="lng"]`);
-    const radInput = document.querySelector(`input[data-k="${key}"][data-i="${idx}"][data-f="radiusKm"]`);
-
-    const lat = parseFloat(latInput?.value || "");
-    const lng = parseFloat(lngInput?.value || "");
-    if (!isFinite(lat) || !isFinite(lng)) return alert("Enter valid lat/lng.");
-
-    r.lat = Number(lat.toFixed(6));
-    r.lng = Number(lng.toFixed(6));
-    if (radInput){
-      const rk = parseFloat(radInput.value || "50");
-      r.radiusKm = isFinite(rk) ? Number(rk) : 50;
-    }
-    arr[idx] = r;
-    this._saveArray(key, arr);
-
-    this.refresh();
-    alert("Saved.");
-  },
-
-  saveUserFromForm(){
-    const email = document.getElementById("car_uEmail").value.trim();
-    const display = document.getElementById("car_uDisplay").value.trim();
-    const role = document.getElementById("car_uRole").value;
-    const perms = Array.from(document.querySelectorAll(".car_perm")).filter(c=>c.checked).map(c=>c.value);
-    CAR_Auth.upsertUser({email, display, role, permissions: perms});
-  },
-
-  resetUserFromForm(){
-    const email = document.getElementById("car_uEmail").value.trim();
-    CAR_Auth.resetStaffPassword(email);
-  },
-
-  fillUserForm(email){
-    const users = CAR.LS.get(CAR_Auth.usersKey, []);
-    const u = users.find(x => (x.email||"").toLowerCase() === String(email).toLowerCase());
-    if (!u) return;
-    document.getElementById("car_uEmail").value = u.email || "";
-    document.getElementById("car_uDisplay").value = u.display || "";
-    document.getElementById("car_uRole").value = u.role || "staff";
-    const allowed = new Set(u.role==="admin" ? CAR_SECTIONS : (u.permissions||[]));
-    document.querySelectorAll(".car_perm").forEach(c => c.checked = allowed.has(c.value));
+    setTimeout(()=>{
+      const save = document.getElementById("admSave");
+      const reset = document.getElementById("admReset");
+      if (save) save.onclick = ()=> AUTH.upsertStaff(document.getElementById("admEmail").value, document.getElementById("admDisplay").value);
+      if (reset) reset.onclick = ()=> AUTH.resetStaff(document.getElementById("admEmail").value);
+    }, 0);
   }
 };
 
-// Wrap existing showSection with permission check + map init
-(function(){
-  // Logout button
-  const logoutBtn = document.getElementById("carLogoutBtn");
-  if (logoutBtn){
-    logoutBtn.addEventListener("click", (e)=>{ e.preventDefault(); CAR_Auth.logout(); });
+/* =========================================================
+   Navigation
+   ========================================================= */
+function setPageTitle(title, hint){
+  document.getElementById("pageTitle").textContent = title;
+  document.getElementById("pageHint").textContent = hint || "";
+}
+function showSection(key){
+  // gate
+  if (!AUTH.current()){
+    AUTH.showLogin();
+    return;
+  }
+  if (!AUTH.can(key)){
+    alert("Access denied: " + key);
+    return;
   }
 
-  // Preserve original
-  const origShowSection = window.showSection;
-  if (typeof origShowSection === "function"){
-    window.showSection = function(key){
-      if (!CAR_Auth.current()){
-        CAR_Auth.showLogin();
-        return;
-      }
-      if (!CAR_Auth.can(key)){
-        alert("Access denied: " + key);
-        return;
-      }
-      origShowSection(key);
-      if (key === "map"){
-        if (!document.getElementById("car_mapCenter").value) document.getElementById("car_mapCenter").value = "-27.4698, 153.0251";
-        document.getElementById("car_mapZoom").value = document.getElementById("car_mapZoom").value || "10";
-        CAR_Map.init(false);
-        CAR_Map.renderManager();
-      }
-    };
-  }
-})();
+  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+  const el = document.getElementById("section-" + key);
+  if (!el) return alert("Section not found: " + key);
+  el.classList.add("active");
 
-// Boot auth gating after the original app booted.
-(async function(){
-  await CAR_Auth.ensureDefaults();
-  const u = CAR_Auth.current();
+  document.querySelectorAll("#nav button").forEach(b=>b.classList.remove("active"));
+  const btn = document.querySelector(`#nav button[data-section="${key}"]`);
+  if (btn) btn.classList.add("active");
+
+  const map = {
+    dashboard:["Dashboard","Shared database via Google Sheets."],
+    animals_list:["Animals – List","View / edit all animals."],
+    animals_add:["Animals – Add","Add a new animal record."],
+    fosters:["Fosters","Foster carers and capacity."],
+    vets:["Vets","Vet clinic list."],
+    pounds:["Pounds","Pounds and euthanasia dates."],
+    calendar:["Calendar","Reminders and bookings."],
+    accounting:["Accounting","Simple expense tracking."],
+    rescue:["Rescue Info","Branding + contact info."]
+  };
+  const t = map[key] || [key,""];
+  setPageTitle(t[0], t[1]);
+}
+
+document.getElementById("nav").addEventListener("click",(e)=>{
+  const btn = e.target.closest("button[data-section]");
+  if (!btn) return;
+  showSection(btn.dataset.section);
+});
+
+/* =========================================================
+   Data model + render
+   ========================================================= */
+function getNextAnimalCode(species){
+  const animals = LS.get("animals", []);
+  const prefix = species === "dog" ? "D" : "C";
+  let max = 0;
+  animals.forEach(a=>{
+    if (typeof a.code === "string" && a.code.startsWith(prefix)){
+      const n = parseInt(a.code.slice(1),10);
+      if (!isNaN(n)) max = Math.max(max,n);
+    }
+  });
+  return prefix + String(max+1).padStart(4,"0");
+}
+
+function renderDashboard(){
+  const animals = LS.get("animals", []);
+  document.getElementById("dashTotal").textContent = String(animals.length);
+  document.getElementById("dashFoster").textContent = String(animals.filter(a=>a.location==="foster").length);
+  document.getElementById("dashAdopted").textContent = String(animals.filter(a=>a.location==="adopted").length);
+
+  const newest = animals.slice().sort((a,b)=> (b.createdAt||0)-(a.createdAt||0)).slice(0,10);
+  const box = document.getElementById("dashNewest");
+  box.innerHTML = newest.length ? newest.map(a=>`
+    <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+      <div>
+        <h4 style="margin:0">${escapeHtml(a.code)} • ${escapeHtml(a.name||"Unnamed")}</h4>
+        <div class="muted">${escapeHtml(a.species)} • ${escapeHtml(a.location||"")} • rescued ${escapeHtml(a.dateRescued||"")}</div>
+      </div>
+      <button class="btn ghost" onclick="openEdit('${escapeAttr(a.id)}')">Edit</button>
+    </div>
+  `).join("") : `<div class="item"><div class="muted">No animals yet.</div></div>`;
+}
+
+function renderAnimals(){
+  const animals = LS.get("animals", []).slice().sort((a,b)=> new Date(a.dateRescued||0) - new Date(b.dateRescued||0));
+  const box = document.getElementById("animalsList");
+  box.innerHTML = animals.length ? animals.map(a=>`
+    <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+      <div>
+        <h4 style="margin:0">${escapeHtml(a.code)} • ${escapeHtml(a.name||"Unnamed")}</h4>
+        <div class="muted">${escapeHtml(a.species)} • rescued ${escapeHtml(a.dateRescued||"")} • location ${escapeHtml(a.location||"")}</div>
+      </div>
+      <div class="btnrow" style="margin:0">
+        <button class="btn ghost" onclick="openEdit('${escapeAttr(a.id)}')">Edit</button>
+      </div>
+    </div>
+  `).join("") : `<div class="item"><div class="muted">No animals yet.</div></div>`;
+}
+
+function openEdit(id){
+  const animals = LS.get("animals", []);
+  const a = animals.find(x=>x.id===id);
+  if (!a) return alert("Animal not found.");
+  const wrap = document.getElementById("editWrap");
+  wrap.classList.remove("muted");
+  wrap.innerHTML = `
+    <div class="row">
+      <div class="field md"><label>Code</label><input value="${escapeAttr(a.code||"")}" readonly></div>
+      <div class="field md"><label>Species</label><input value="${escapeAttr(a.species||"")}" readonly></div>
+      <div class="field md"><label>Name</label><input id="eName" value="${escapeAttr(a.name||"")}"></div>
+      <div class="field md"><label>Date Rescued</label><input id="eRescued" type="date" value="${escapeAttr(a.dateRescued||"")}"></div>
+      <div class="field md"><label>Sex</label>
+        <select id="eSex">
+          <option value="" ${!a.sex?"selected":""}>Select…</option>
+          <option value="male" ${a.sex==="male"?"selected":""}>Male</option>
+          <option value="female" ${a.sex==="female"?"selected":""}>Female</option>
+        </select>
+      </div>
+      <div class="field md"><label>Colour</label><input id="eColour" value="${escapeAttr(a.colour||"")}"></div>
+      <div class="field md"><label>Location</label>
+        <select id="eLocation">
+          <option value="" ${!a.location?"selected":""}>Select…</option>
+          <option value="pound" ${a.location==="pound"?"selected":""}>Pound</option>
+          <option value="foster" ${a.location==="foster"?"selected":""}>Foster</option>
+          <option value="adopted" ${a.location==="adopted"?"selected":""}>Adopted</option>
+          <option value="transport" ${a.location==="transport"?"selected":""}>Transport</option>
+        </select>
+      </div>
+      <div class="field full"><label>Notes</label><textarea id="eNotes">${escapeHtml(a.notes||"")}</textarea></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn primary" onclick="saveEdit('${escapeAttr(a.id)}')">Save</button>
+      <button class="btn danger" onclick="deleteAnimal('${escapeAttr(a.id)}')">Delete</button>
+    </div>
+  `;
+  showSection("animals_edit");
+}
+
+function saveEdit(id){
+  const animals = LS.get("animals", []);
+  const idx = animals.findIndex(x=>x.id===id);
+  if (idx===-1) return;
+  animals[idx].name = document.getElementById("eName").value.trim();
+  animals[idx].dateRescued = document.getElementById("eRescued").value || todayISO();
+  animals[idx].sex = document.getElementById("eSex").value;
+  animals[idx].colour = document.getElementById("eColour").value.trim();
+  animals[idx].location = document.getElementById("eLocation").value;
+  animals[idx].notes = document.getElementById("eNotes").value.trim();
+  LS.set("animals", animals);
+  alert("Saved.");
+  renderAll();
+  showSection("animals_list");
+}
+
+function deleteAnimal(id){
+  if (!confirm("Delete this animal?")) return;
+  const animals = LS.get("animals", []).filter(x=>x.id!==id);
+  LS.set("animals", animals);
+  renderAll();
+  showSection("animals_list");
+}
+
+function renderFosters(){
+  const fosters = LS.get("fosters", []);
+  const box = document.getElementById("fosterList");
+  box.innerHTML = fosters.length ? fosters.map(f=>{
+    const remaining = Math.max(0,(f.capacity||0)-(f.hosting||0));
+    const badge = remaining<=0
+      ? `<span class="pill" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.35)">Full</span>`
+      : `<span class="pill">Space: ${remaining}</span>`;
+    return `
+      <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+        <div>
+          <h4 style="margin:0">${escapeHtml(f.name||"Unnamed foster")}</h4>
+          <div class="muted">${escapeHtml(f.phone||"")} • cap ${f.capacity||0} • hosting ${f.hosting||0}</div>
+          <div class="muted">${escapeHtml(f.address||"")}</div>
+        </div>
+        ${badge}
+      </div>
+    `;
+  }).join("") : `<div class="item"><div class="muted">No fosters yet.</div></div>`;
+}
+
+function renderVets(){
+  const vets = LS.get("vets", []);
+  const box = document.getElementById("vetList");
+  box.innerHTML = vets.length ? vets.map(v=>`
+    <div class="item">
+      <h4 style="margin:0">${escapeHtml(v.name||"")}</h4>
+      <div class="muted">${escapeHtml(v.phone||"")}</div>
+      <div class="muted">${escapeHtml(v.address||"")}</div>
+    </div>
+  `).join("") : `<div class="item"><div class="muted">No vets yet.</div></div>`;
+}
+
+function renderPounds(){
+  const pounds = LS.get("pounds", []);
+  const box = document.getElementById("poundList");
+  box.innerHTML = pounds.length ? pounds.map(p=>`
+    <div class="item">
+      <h4 style="margin:0">${escapeHtml(p.name||"")}</h4>
+      <div class="muted">${escapeHtml(p.contact||"")} • euth day: ${escapeHtml(p.euth||"")}</div>
+      <div class="muted">${escapeHtml(p.address||"")}</div>
+    </div>
+  `).join("") : `<div class="item"><div class="muted">No pounds yet.</div></div>`;
+}
+
+function renderCalendar(){
+  const cal = LS.get("calendar", []).slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const box = document.getElementById("calendarList");
+  box.innerHTML = cal.length ? cal.map(c=>{
+    const badge = c.status==="completed"
+      ? `<span class="pill" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.35)">Completed</span>`
+      : `<span class="pill" style="background:rgba(43,108,176,.15);border-color:rgba(43,108,176,.35)">Booked</span>`;
+    return `
+      <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+        <div>
+          <h4 style="margin:0">${escapeHtml(c.date||"")}</h4>
+          <div class="muted">${escapeHtml(c.note||"")}</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          ${badge}
+          <button class="btn ghost" onclick="removeCal('${escapeAttr(c.id)}')">Remove</button>
+        </div>
+      </div>
+    `;
+  }).join("") : `<div class="item"><div class="muted">No calendar entries yet.</div></div>`;
+}
+function removeCal(id){
+  LS.set("calendar", LS.get("calendar", []).filter(x=>x.id!==id));
+  renderCalendar();
+}
+
+function renderExpenses(){
+  const exp = LS.get("expenses", []).slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const box = document.getElementById("expenseList");
+  let total = 0;
+  box.innerHTML = exp.length ? exp.map(e=>{
+    total += e.amt||0;
+    return `
+      <div class="item" style="display:flex;justify-content:space-between;gap:12px;align-items:center">
+        <div>
+          <h4 style="margin:0">${escapeHtml(e.date)} • ${escapeHtml(e.cat)}</h4>
+          <div class="muted">${escapeHtml(e.desc)} — $${(e.amt||0).toFixed(2)}</div>
+        </div>
+        <button class="btn ghost" onclick="removeExpense('${escapeAttr(e.id)}')">Remove</button>
+      </div>
+    `;
+  }).join("") : `<div class="item"><div class="muted">No expenses yet.</div></div>`;
+  document.getElementById("accTotal").textContent = total.toFixed(2);
+}
+function removeExpense(id){
+  LS.set("expenses", LS.get("expenses", []).filter(x=>x.id!==id));
+  renderExpenses();
+}
+
+function loadBrand(){
+  const info = LS.get("rescue_info", {name:"Cartmills Animal Rescue", email:"", notes:""});
+  document.getElementById("brandName").textContent = info.name || "Cartmills Animal Rescue";
+  document.title = (info.name || "Cartmills Animal Rescue") + " – Tracker";
+  document.getElementById("rName").value = info.name || "";
+  document.getElementById("rEmail").value = info.email || "";
+  document.getElementById("rNotes").value = info.notes || "";
+}
+
+function renderAll(){
+  loadBrand();
+  renderDashboard();
+  renderAnimals();
+  renderFosters();
+  renderVets();
+  renderPounds();
+  renderCalendar();
+  renderExpenses();
+  AUTH.renderAdminArea();
+}
+
+/* =========================================================
+   Buttons / events
+   ========================================================= */
+document.getElementById("btnTheme").onclick = ()=>{
+  const html = document.documentElement;
+  const cur = html.getAttribute("data-theme") || "light";
+  html.setAttribute("data-theme", cur==="dark" ? "light" : "dark");
+  localStorage.setItem("theme", JSON.stringify(html.getAttribute("data-theme")));
+};
+
+document.getElementById("btnSync").onclick = async ()=>{
+  try{
+    setSyncStatus("Loading shared…");
+    await CAR_loadShared();
+    renderAll();
+    setSyncStatus("Loaded shared.");
+  } catch(e){
+    alert("Shared load failed: " + e.message);
+    setSyncStatus("Shared load failed.");
+  }
+};
+
+document.getElementById("logoutBtn").onclick = (e)=>{ e.preventDefault(); AUTH.logout(); };
+
+document.getElementById("aSpecies").addEventListener("change", ()=>{
+  const species = document.getElementById("aSpecies").value;
+  document.getElementById("aCode").value = species ? getNextAnimalCode(species) : "";
+});
+
+document.getElementById("btnSaveAnimal").onclick = ()=>{
+  const species = document.getElementById("aSpecies").value;
+  if (!species) return alert("Select species.");
+  const code = document.getElementById("aCode").value;
+  if (!code) return alert("Code missing.");
+  const animals = LS.get("animals", []);
+  if (animals.some(a=>a.code===code)) return alert("That code already exists. Change species to regenerate.");
+  animals.push({
+    id: uid(),
+    code,
+    species,
+    name: document.getElementById("aName").value.trim(),
+    dateRescued: document.getElementById("aRescued").value || todayISO(),
+    sex: document.getElementById("aSex").value,
+    colour: document.getElementById("aColour").value.trim(),
+    location: document.getElementById("aLocation").value,
+    notes: document.getElementById("aNotes").value.trim(),
+    createdAt: Date.now()
+  });
+  LS.set("animals", animals);
+  alert("Saved.");
+  document.getElementById("btnClearAnimal").click();
+  renderAll();
+  showSection("animals_list");
+};
+
+document.getElementById("btnClearAnimal").onclick = ()=>{
+  ["aSpecies","aCode","aName","aRescued","aSex","aColour","aLocation","aNotes"].forEach(id=>{
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = "";
+  });
+  document.getElementById("aRescued").value = todayISO();
+};
+
+document.getElementById("btnSaveFoster").onclick = ()=>{
+  const fosters = LS.get("fosters", []);
+  fosters.push({
+    id: uid(),
+    name: document.getElementById("fName").value.trim(),
+    phone: document.getElementById("fPhone").value.trim(),
+    address: document.getElementById("fAddress").value.trim(),
+    capacity: Number(document.getElementById("fCap").value||0),
+    hosting: Number(document.getElementById("fHosting").value||0)
+  });
+  LS.set("fosters", fosters);
+  alert("Saved.");
+  renderFosters();
+};
+
+document.getElementById("btnSaveVet").onclick = ()=>{
+  const vets = LS.get("vets", []);
+  vets.push({
+    id: uid(),
+    name: document.getElementById("vName").value.trim(),
+    phone: document.getElementById("vPhone").value.trim(),
+    address: document.getElementById("vAddress").value.trim()
+  });
+  LS.set("vets", vets);
+  alert("Saved.");
+  renderVets();
+};
+
+document.getElementById("btnSavePound").onclick = ()=>{
+  const pounds = LS.get("pounds", []);
+  const name = document.getElementById("pName").value.trim();
+  const euth = document.getElementById("pEuth").value;
+  pounds.push({
+    id: uid(),
+    name,
+    contact: document.getElementById("pContact").value.trim(),
+    address: document.getElementById("pAddress").value.trim(),
+    euth
+  });
+  LS.set("pounds", pounds);
+
+  // add reminder day before
+  if (euth){
+    const cal = LS.get("calendar", []);
+    const d = new Date(euth);
+    d.setDate(d.getDate()-1);
+    cal.push({ id: uid(), date: d.toISOString().slice(0,10), note: `Reminder: Call pound (${name}) before euthanasia day.`, status:"booked" });
+    LS.set("calendar", cal);
+  }
+  alert("Saved.");
+  renderPounds(); renderCalendar();
+};
+
+document.getElementById("btnAddCal").onclick = ()=>{
+  const date = document.getElementById("cDate").value;
+  const note = document.getElementById("cNote").value.trim();
+  if (!date || !note) return alert("Date and note required.");
+  const cal = LS.get("calendar", []);
+  cal.push({ id: uid(), date, note, status: document.getElementById("cStatus").value });
+  LS.set("calendar", cal);
+  renderCalendar();
+};
+
+document.getElementById("btnAddExpense").onclick = ()=>{
+  const date = document.getElementById("accDate").value || todayISO();
+  const desc = document.getElementById("accDesc").value.trim();
+  const cat = document.getElementById("accCat").value;
+  const amt = parseFloat(document.getElementById("accAmt").value);
+  if (!desc || !isFinite(amt)) return alert("Description and amount required.");
+  const exp = LS.get("expenses", []);
+  exp.push({ id: uid(), date, desc, cat, amt: Number(amt.toFixed(2)) });
+  LS.set("expenses", exp);
+  renderExpenses();
+};
+
+document.getElementById("btnSaveRescue").onclick = ()=>{
+  const info = {
+    name: document.getElementById("rName").value.trim() || "Cartmills Animal Rescue",
+    email: document.getElementById("rEmail").value.trim(),
+    notes: document.getElementById("rNotes").value.trim()
+  };
+  LS.set("rescue_info", info);
+  loadBrand();
+  alert("Saved.");
+};
+
+document.getElementById("btnExport").onclick = ()=>{
+  const payload = CAR_buildPayload();
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "cartmills_backup.json";
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+};
+
+document.getElementById("btnImport").onclick = ()=>{
+  const inp = document.getElementById("importFile");
+  inp.onchange = async ()=>{
+    const f = inp.files[0];
+    if (!f) return;
+    try{
+      const data = JSON.parse(await f.text());
+      Object.keys(data).forEach(k => localStorage.setItem(k, JSON.stringify(data[k])));
+      alert("Imported.");
+      renderAll();
+    }catch(e){
+      alert("Import failed: " + e.message);
+    }finally{
+      inp.value = "";
+    }
+  };
+  inp.click();
+};
+
+/* Login buttons */
+document.getElementById("btnLogin").onclick = ()=> AUTH.login(document.getElementById("loginEmail").value, document.getElementById("loginPw").value);
+document.getElementById("btnChangePw").onclick = ()=> AUTH.changeMyPassword(document.getElementById("pw1").value, document.getElementById("pw2").value);
+
+/* =========================================================
+   Boot
+   ========================================================= */
+async function boot(){
+  // theme
+  const theme = (()=>{ try{return JSON.parse(localStorage.getItem("theme")||'"light"');}catch{return "light";} })();
+  document.documentElement.setAttribute("data-theme", theme);
+
+  document.getElementById("aRescued").value = todayISO();
+  document.getElementById("accDate").value = todayISO();
+  document.getElementById("cDate").value = todayISO();
+
+  await AUTH.ensureDefaults();
+
+  // try shared load first (non-fatal)
+  try{
+    setSyncStatus("Loading shared…");
+    await CAR_loadShared();
+  } catch(e){
+    setSyncStatus("Shared load failed (using local).");
+  }
+
+  const u = AUTH.current();
   if (!u){
-    CAR_Auth.showLogin();
-  } else if (u.mustChange && u.role !== "admin"){
-    CAR_Auth.showPwChange();
-  } else {
-    CAR_Auth.applyNavPermissions();
-    CAR_Map.renderManager();
+    AUTH.showLogin();
+    return;
   }
-})();
+  if (u.mustChange && u.role !== "admin"){
+    AUTH.showPwChange();
+    return;
+  }
+  AUTH.applyNav();
+  renderAll();
+  showSection("dashboard");
+}
+
+boot();
 </script>
 
 </body>
 </html>
+
