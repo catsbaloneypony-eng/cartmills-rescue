@@ -1066,7 +1066,133 @@ window.addEventListener("error", (e) => {
 /* =========================================================
    Helpers
    ========================================================= */
-const LS = {
+const LS = {// ===== Shared DB via Google Sheets (Apps Script Web App) =====
+const CAR_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbycEcZSNa6pWX7MbcB1Kvm0njfKlG_tYhNVOtq11bN1wlTQmKhdgsV3eV1NkLVxA2nF/exec";
+const CAR_SLUG = "cartmills";
+const CAR_TOKEN = "Cartmills2026"; // must match Apps Script TOKEN exactly
+
+// Remove photos/files from shared sync (Sheets cell size limit)
+function CAR_stripBigStuff(payload){
+  const p = JSON.parse(JSON.stringify(payload || {}));
+
+  (p.animals || []).forEach(a => {
+    if (a) {
+      a.photo = "";
+      (a.vaccinations||[]).forEach(x => x.data = "");
+      (a.certificates||[]).forEach(x => x.data = "");
+      (a.media||[]).forEach(x => x.data = "");
+    }
+  });
+
+  (p.fosters || []).forEach(f => { if (f) f.photo = ""; });
+  (p.adopters || []).forEach(a => { if (a) a.photo = ""; });
+
+  (p.expenses || []).forEach(e => { if (e && e.receipt) e.receipt.data = ""; });
+  (p.forms || []).forEach(f => { if (f) f.data = ""; });
+  (p.merch || []).forEach(m => { if (m) m.photo = ""; });
+
+  return p;
+}
+
+function CAR_buildPayload(){
+  return {
+    rescue_info: LS.get("rescue_info", {}),
+    animals: LS.get("animals", []),
+    archive: LS.get("archive", []),
+    fosters: LS.get("fosters", []),
+    adopters: LS.get("adopters", []),
+    staff: LS.get("staff", []),
+    vets: LS.get("vets", []),
+    transport: LS.get("transport", []),
+    pounds: LS.get("pounds", []),
+    calendar: LS.get("calendar", []),
+    expenses: LS.get("expenses", []),
+    forms: LS.get("forms", []),
+    donations: LS.get("donations", []),
+    fundraisers: LS.get("fundraisers", []),
+    merch: LS.get("merch", []),
+    directory: LS.get("directory", [])
+  };
+}
+
+function CAR_applyPayload(payload){
+  if (!payload) return;
+  Object.keys(payload).forEach(k => localStorage.setItem(k, JSON.stringify(payload[k])));
+}
+
+// --- LOAD (JSONP) ---
+function CAR_loadShared(){
+  return new Promise((resolve, reject) => {
+    const cbName = "CAR_onLoad_" + Date.now();
+    window[cbName] = (resp) => {
+      try{
+        if (!resp || !resp.ok) throw new Error(resp?.error || "Load failed");
+        CAR_applyPayload(resp.payload || {});
+        resolve(true);
+      } catch(err){
+        reject(err);
+      } finally {
+        try { delete window[cbName]; } catch {}
+        script.remove();
+      }
+    };
+
+    const url = `${CAR_WEBAPP_URL}?action=load&slug=${encodeURIComponent(CAR_SLUG)}&token=${encodeURIComponent(CAR_TOKEN)}&callback=${encodeURIComponent(cbName)}`;
+    const script = document.createElement("script");
+    script.src = url;
+    script.onerror = () => reject(new Error("Load failed (URL/token/deploy access)"));
+    document.head.appendChild(script);
+  });
+}
+
+// --- SAVE (POST via hidden form) ---
+let CAR_saveTimer = null;
+function CAR_scheduleSave(){
+  clearTimeout(CAR_saveTimer);
+  CAR_saveTimer = setTimeout(CAR_saveNow, 900);
+}
+
+function CAR_saveNow(){
+  const payload = CAR_stripBigStuff(CAR_buildPayload());
+  const payloadText = JSON.stringify(payload);
+
+  let iframe = document.getElementById("carSaveFrame");
+  if (!iframe){
+    iframe = document.createElement("iframe");
+    iframe.id = "carSaveFrame";
+    iframe.name = "carSaveFrame";
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+  }
+
+  let form = document.getElementById("carSaveForm");
+  if (!form){
+    form = document.createElement("form");
+    form.id = "carSaveForm";
+    form.method = "POST";
+    form.target = "carSaveFrame";
+    form.action = CAR_WEBAPP_URL;
+    form.style.display = "none";
+    document.body.appendChild(form);
+  }
+
+  form.innerHTML = `
+    <input name="action" value="save" />
+    <input name="slug" value="${CAR_SLUG}" />
+    <input name="token" value="${CAR_TOKEN}" />
+    <input name="payload" />
+  `;
+  form.querySelector('input[name="payload"]').value = payloadText;
+  form.submit();
+}
+
+// Wrap LS.set so ANY change triggers shared save
+const _LS_set_original = LS.set.bind(LS);
+LS.set = function(key, val){
+  _LS_set_original(key, val);
+  CAR_scheduleSave();
+};
+
   get(key, fallback){
     try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
     catch { return fallback; }
@@ -2441,7 +2567,15 @@ function importBackup(){
       const data = JSON.parse(text);
       Object.keys(data).forEach(k => LS.set(k, data[k]));
       alert("Imported backup.");
-      boot();
+     (async () => {
+  try {
+    await CAR_loadShared();   // pull shared data first
+  } catch (e) {
+    alert("Shared DB load failed: " + e.message);
+  }
+  boot();                     // then render the app
+})();
+
     } catch(err){
       alert("Import failed: " + err.message);
     } finally {
