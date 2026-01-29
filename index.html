@@ -2579,7 +2579,15 @@ function importBackup(){
   } catch (e) {
     alert("Shared DB load failed: " + e.message);
   }
+  (async () => {
+  try {
+    await CAR_loadShared();   // pull shared data from Google Sheets first
+  } catch (e) {
+    console.warn("Shared DB load failed:", e);
+  }
   boot();                     // then render the app
+})();
+
 })();
 
     } catch(err){
