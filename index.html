@@ -1066,10 +1066,16 @@ window.addEventListener("error", (e) => {
 /* =========================================================
    Helpers
    ========================================================= */
-const LS = {// ===== Shared DB via Google Sheets (Apps Script Web App) =====
-const CAR_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbycEcZSNa6pWX7MbcB1Kvm0njfKlG_tYhNVOtq11bN1wlTQmKhdgsV3eV1NkLVxA2nF/exec";
-const CAR_SLUG = "cartmills";
-const CAR_TOKEN = "Cartmills2026"; // must match Apps Script TOKEN exactly
+const LS = {
+  get(key, fallback){
+    try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+    catch { return fallback; }
+  },
+  set(key, val){
+    localStorage.setItem(key, JSON.stringify(val));
+  }
+};
+
 
 // Remove photos/files from shared sync (Sheets cell size limit)
 function CAR_stripBigStuff(payload){
